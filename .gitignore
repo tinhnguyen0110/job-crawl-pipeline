@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Logs
+logs/
+*.log
+
+# Output CSVs
+*.csv
+
+# Credentials / config
+config/config.yaml
+.env
+
+# Airflow
+airflow.db
+*.pid

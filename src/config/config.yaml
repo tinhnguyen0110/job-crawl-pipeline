@@ -1,0 +1,32 @@
+project:
+  name: Crawl2Insight
+  version: 0.1.0
+
+crawling:
+  source: jobstreet
+  url: "https://www.jobstreet.vn/việc-làm-Ai-Engineer?sp=recent_homepage"
+  user_agent: "Mozilla/5.0"
+  timeout: 10
+  max_retries: 3
+  headless: false
+  slow_mo: 100
+  csv_output_path: "/opt/airflow/data/raw/jobstreet_ai_jobs.csv"
+
+ollama:
+  model: mistral
+  endpoint: http://ollama:11434/api/generate
+
+output:
+  save_to_csv: true
+  structured_csv_path: "/opt/airflow/data/processed/jobs_structured.csv"
+
+logging:
+  level: INFO
+  log_file: "logs/app.log"
+
+database:
+  host: job_pg
+  port: 5432
+  dbname: job_data
+  user: postgres
+  password: 123456
