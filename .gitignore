@@ -21,3 +21,4 @@ config/config.yaml
 # Airflow
 airflow.db
 *.pid
+*.history
