@@ -19,7 +19,7 @@ dags:
     branch: deploy_gke
     subPath: airflow/dags  # thư mục chứa DAGs trong repo
     depth: 1
-    wait: 10
+    wait: 5
     sshKeySecret: airflow-git-ssh-key
     # sshKnownHosts: |
     #   github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
