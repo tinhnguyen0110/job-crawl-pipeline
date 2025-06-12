@@ -17,7 +17,7 @@ def _close_popups(page: Page):
             popup_button = page.locator(selector).first
             if popup_button.is_visible(timeout=500):
                 logger.info(f"Phát hiện và đóng pop-up với selector: '{selector}'")
-                popup_button.click(timeout=2000)
+                popup_button.click(timeout=1000)
                 page.wait_for_timeout(500)
         except PlaywrightTimeoutError:
             pass
@@ -26,14 +26,8 @@ def _close_popups(page: Page):
 
 def safe_click(page, job_card):
 
-    # Dọn dẹp pop-up trước khi click
     _close_popups(page)
-    
-    # Thực hiện hành động click chính
-    logger.info("Thực hiện click vào job card...")
     job_card.click()
-    
-    # Dọn dẹp pop-up một lần nữa sau khi click
     _close_popups(page)
 
 
@@ -53,9 +47,8 @@ def crawl_jobstreet_to_local_callable(**kwargs):
     logger.info(f"🚀 Bắt đầu crawl từ URL: {start_url}")
     logger.info(f"📁 File output sẽ được lưu tại: {output_file_path}")
     os.makedirs(output_dir, exist_ok=True)
-
     scraped_data = []
-    browser = None
+
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -76,7 +69,8 @@ def crawl_jobstreet_to_local_callable(**kwargs):
                 
                 for job_card in jobs:
                     try:
-                        job_card.click() # Chúng ta sẽ bỏ force=True và xử lý pop-up nếu có
+                        safe_click(page, job_card)
+                        # job_card.click() # Chúng ta sẽ bỏ force=True và xử lý pop-up nếu có
                         page.wait_for_selector(".job-description-container", timeout=5000)
 
                         # Bước 1: Tìm các phần tử cha
@@ -121,7 +115,8 @@ def crawl_jobstreet_to_local_callable(**kwargs):
                             "company": company,
                             "time_posted": time_posted,
                             "description": description,
-                            "crawled_at": datetime.now().isoformat()
+                            "crawled_at": datetime.now().isoformat(),
+                            "processed": False,  # Mặc định là False, sẽ cập nhật sau khi ghi vào DB
                         }
                         
                         scraped_data.append(job_data)
@@ -145,8 +140,6 @@ def crawl_jobstreet_to_local_callable(**kwargs):
     except Exception as e:
         logger.error(f"Lỗi nghiêm trọng trong quá trình crawl: {e}", exc_info=True)
         raise
-    finally:
-        if browser: browser.close()
 
     if not scraped_data:
         logger.warning("Không crawl được dữ liệu nào.")
@@ -168,7 +161,7 @@ def load_raw_json_to_sql_callable(**kwargs):
     db_pass = os.environ.get("DB_PASS", "123456")
     db_name = os.environ.get("DB_NAME", "job_db")
     db_host = os.environ.get("DB_HOST", "host.docker.internal")
-    db_port = os.environ.get("DB_PORT", "5432")
+    db_port = os.environ.get("DB_PORT", "5431")
     db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
     engine = create_engine(db_url)
     

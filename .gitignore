@@ -18,6 +18,7 @@ logs/
 config/config.yaml
 .env
 
+data/
 # Airflow
 airflow.db
 *.pid
