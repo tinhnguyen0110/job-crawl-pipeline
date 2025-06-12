@@ -35,22 +35,32 @@ docker push gcr.io/alpine-figure-461007-i9/custom-airflow:v1
 
 kubectl create namespace airflow
 
+## Tạo các secret
 kubectl create secret generic airflow-db-connection -n airflow ^
-  --from-literal=connection='postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db'
-
-kubectl delete secret airflow-git-ssh-key --namespace airflow
+  --from-literal=connection='postgresql+psycopg2://postgres:123456@127.0.0.1:5432/airflow'
 
 kubectl create secret generic airflow-git-ssh-key --namespace airflow ^
   --from-file=gitSshKey=./airflow-gitsync
 
+kubectl create secret generic airflow-fernet-key ^
+  --from-literal=value='PpwOpKTKaHYo-TuiwCIMSwxNmBJknIf4rV5KctQ_8-k='
+
+kubectl create secret generic airflow-webserver-secret-key ^
+  --from-literal=value='b60a4906211cf835536284864f38c421'
+
+kubectl delete secret airflow-db-connection airflow-git-ssh-key airflow-fernet-key airflow-webserver-secret-key --namespace airflow
+kubectl delete secret airflow-webserver-secret-key --namespace airflow
+
+kubectl delete pvc -n airflow --all
+helm uninstall airflow -n airflow
 
 helm repo add apache-airflow https://airflow.apache.org
 helm repo update
 
 helm upgrade --install airflow apache-airflow/airflow ^
   -n airflow ^
-  -f deployments/airflow/values.yaml ^
-  --debug --timeout 10m
+  -f deployments/airflow/values_2.yaml ^
+  --debug --timeout 7m
 
 ## Tạo Gitsync cho Airflow
     kubectl create secret generic git-credentials --from-file=.git.env -n airflow
@@ -59,3 +69,13 @@ helm upgrade --install airflow apache-airflow/airflow ^
     kubectl create secret generic git-ssh-key-secret \
     --from-file=id_rsa=./airflow-gitsync \
     --namespace airflow
+
+# kubectl exec -it airflow-scheduler-7c446bc5f9-t6sz5 -- bash
+kubectl port-forward svc/airflow-webserver 8000:8080 -n airflow
+
+airflow users create \
+    --username admin1 \
+    --firstname Admin \
+    --lastname User \
+    --role Admin \
+    --email admin@example.com

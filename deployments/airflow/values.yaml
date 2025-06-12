@@ -8,7 +8,7 @@ serviceAccount:
   create: false
   name: airflow-ksa
 
-envFromSecret: airflow-db-conn-secret
+
 
 dags:
   persistence:
@@ -29,11 +29,32 @@ dags:
 logs:
   persistence:
     enabled: true
+    # Thêm dòng này để chỉ yêu cầu ổ đĩa cho một node duy nhất
     size: 1Gi
     storageClassName: "standard"
 
 postgresql:
   enabled: false  # ❌ Tắt PostgreSQL tích hợp, bạn đã có Cloud SQL riêng
+
+# envFromSecret: airflow-db-conn-secret
+extraEnvVars:
+  - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+    valueFrom:
+      secretKeyRef:
+        name: airflow-db-connection
+        key: connection
+
+  - name: AIRFLOW__CORE__FERNET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: airflow-fernet-key
+        key: value
+
+  - name: AIRFLOW__WEBSERVER__SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: airflow-webserver-secret-key
+        key: value
 
 workers:
   extraContainers:

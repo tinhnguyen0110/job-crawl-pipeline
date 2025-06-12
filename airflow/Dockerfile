@@ -1,4 +1,4 @@
-FROM apache/airflow:2.8.1-python3.10
+FROM apache/airflow:2.10.5-python3.12
 # 👇 Cài Python packages (khuyến nghị Airflow chạy dưới user airflow)
 USER airflow
 # Copy requirements.txt và cài Python dependencies bằng pip (bắt buộc ở user airflow)
