@@ -14,6 +14,7 @@ with DAG(
     schedule_interval="0 */1 * * *", # Chạy mỗi giờ một lần để xử lý
     start_date=pendulum.datetime(2025, 6, 12, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
+    is_paused_upon_creation=False,
     max_active_runs=1, # Đảm bảo chỉ có 1 lần chạy xử lý tại một thời điểm
     tags=['processing', 'llm']
 ) as dag:
@@ -24,8 +25,6 @@ with DAG(
     process_task = PythonOperator(
         task_id="process_jobs_and_update_db_task",
         python_callable=process_jobs_and_update_db_callable,
-        catchup=False,
-        is_paused_upon_creation=False,
     )
 
     # Task 2: Task thông báo kết quả
