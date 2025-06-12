@@ -48,6 +48,9 @@ kubectl create secret generic airflow-fernet-key ^
 kubectl create secret generic airflow-webserver-secret-key ^
   --from-literal=value='b60a4906211cf835536284864f38c421'
 
+kubectl get secret airflow-webserver-secret-key -n airflow -o yaml
+
+
 kubectl delete secret airflow-db-connection airflow-git-ssh-key airflow-fernet-key airflow-webserver-secret-key --namespace airflow
 kubectl delete secret airflow-webserver-secret-key --namespace airflow
 
