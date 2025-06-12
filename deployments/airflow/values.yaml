@@ -1,49 +1,30 @@
 executor: "KubernetesExecutor"
 
-airflow:
-  image:
-    repository: gcr.io/YOUR_PROJECT_ID/airflow-custom  # <-- thay bằng Docker image của bạn
-    tag: latest
-    pullPolicy: Always
+image:
+  repository: gcr.io/alpine-figure-461007-i9/custom-airflow:v1
+  pullPolicy: Always
 
-  config:
-    AIRFLOW__CORE__EXECUTOR: KubernetesExecutor
-    AIRFLOW__CORE__FERNET_KEY: "YOUR_FERNET_KEY"  # tạo bằng: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://<db_user>:<db_pass>@127.0.0.1:5432/<db_name>
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
-    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
+serviceAccount:
+  create: false
+  name: airflow-ksa
 
-  users:
-    - username: admin
-      password: admin
-      role: Admin
-      email: admin@example.com
-      firstName: Admin
-      lastName: User
-
-  extraEnv:
-    - name: CLOUD_SQL_INSTANCE
-      value: "your-gcp-project:your-region:your-instance-name"
-    - name: DB_USER
-      value: "<db_user>"
-    - name: DB_PASS
-      value: "<db_pass>"
-    - name: DB_NAME
-      value: "<db_name>"
+envFromSecret: airflow-db-conn-secret
 
 dags:
+  persistence:
+      enabled: false # Không cần lưu trữ DAGs trên disk
   gitSync:
     enabled: true
-    repo: "https://github.com/your-org/your-dags-repo.git"
-    branch: "main"
-    subPath: ""
-    syncInterval: 60
-    credentialsSecret: ""  # dùng nếu private repo
+    repo: git@github.com:tinhnguyen0110/job-crawl-pipeline.git
+    branch: deploy_gke
+    subPath: airflow/dags  # thư mục chứa DAGs trong repo
+    depth: 1
+    wait: 60
+    sshKeySecret: airflow-git-ssh-key
+    # sshKnownHosts: |
+    #   github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+    rev: HEAD
 
-webserver:
-  service:
-    type: LoadBalancer
-    port: 8080
 
 logs:
   persistence:
@@ -54,14 +35,35 @@ logs:
 postgresql:
   enabled: false  # ❌ Tắt PostgreSQL tích hợp, bạn đã có Cloud SQL riêng
 
-redis:
-  enabled: false  # ❌ Nếu không dùng CeleryExecutor thì không cần Redis
+workers:
+  extraContainers:
+    - name: cloud-sql-proxy
+      image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
+      command:
+        - "/cloud_sql_proxy"
+        - "--structured-logs"
+        - "-instances=alpine-figure-461007-i9:asia-southeast1:job-pipeline-db=tcp:5432"
+      securityContext:
+        runAsNonRoot: true
+
+webserver:
+  extraContainers:
+    - name: cloud-sql-proxy
+      image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
+      command:
+        - "/cloud_sql_proxy"
+        - "--structured-logs"
+        - "-instances=alpine-figure-461007-i9:asia-southeast1:job-pipeline-db=tcp:5432"
+      securityContext:
+        runAsNonRoot: true
 
 scheduler:
-  replicas: 1
-
-workers:
-  enabled: false  # KubernetesExecutor không cần worker
-
-triggerer:
-  replicas: 1
+  extraContainers:
+    - name: cloud-sql-proxy
+      image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
+      command:
+        - "/cloud_sql_proxy"
+        - "--structured-logs"
+        - "-instances=alpine-figure-461007-i9:asia-southeast1:job-pipeline-db=tcp:5432"
+      securityContext:
+        runAsNonRoot: true

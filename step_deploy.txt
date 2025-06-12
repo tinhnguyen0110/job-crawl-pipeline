@@ -11,14 +11,18 @@ kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
     gcloud iam service-accounts create litellm-proxy-gsa \
     --project=alpine-figure-461007-i9
 
+    gcloud projects add-iam-policy-binding alpine-figure-461007-i9 --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" --role="roles/container.developer"
+    gcloud projects add-iam-policy-binding alpine-figure-461007-i9 --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" --role="roles/cloudsql.client"
+
 2. Tạo Kubernetes Service Account (KSA):
     kubectl create serviceaccount litellm-proxy-ksa -n airflow
-
+    
 3. Liên kết GSA với KSA:
     gcloud iam service-accounts add-iam-policy-binding \
     litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com \
     --role=roles/iam.workloadIdentityUser \
     --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog:litellm-proxy-ksa"
+
 
 4. thêm annotate ksa
     kubectl annotate serviceaccount litellm-proxy-ksa \
@@ -26,11 +30,32 @@ kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
     iam.gke.io/gcp-service-account=litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
 
 ### Deploy airflow to gke
+docker build -t gcr.io/alpine-figure-461007-i9/custom-airflow:v1 .
+docker push gcr.io/alpine-figure-461007-i9/custom-airflow:v1
+
 kubectl create namespace airflow
+
+kubectl create secret generic airflow-db-connection -n airflow ^
+  --from-literal=connection='postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db'
+
+kubectl delete secret airflow-git-ssh-key --namespace airflow
+
+kubectl create secret generic airflow-git-ssh-key --namespace airflow ^
+  --from-file=gitSshKey=./airflow-gitsync
+
+
 helm repo add apache-airflow https://airflow.apache.org
 helm repo update
 
-helm upgrade --install airflow apache-airflow/airflow \
-  --namespace airflow \
-  --create-namespace \
-  -f values.yaml
+helm upgrade --install airflow apache-airflow/airflow ^
+  -n airflow ^
+  -f deployments/airflow/values.yaml ^
+  --debug --timeout 10m
+
+## Tạo Gitsync cho Airflow
+    kubectl create secret generic git-credentials --from-file=.git.env -n airflow
+
+    # Tạo secret chứa SSH key
+    kubectl create secret generic git-ssh-key-secret \
+    --from-file=id_rsa=./airflow-gitsync \
+    --namespace airflow

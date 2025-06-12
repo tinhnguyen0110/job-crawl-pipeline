@@ -1,5 +1,5 @@
 playwright
 requests
 pandas
-psycopg2
+psycopg2-binary
 dateparser
