@@ -24,6 +24,8 @@ with DAG(
     process_task = PythonOperator(
         task_id="process_jobs_and_update_db_task",
         python_callable=process_jobs_and_update_db_callable,
+        catchup=False,
+        is_paused_upon_creation=False,
     )
 
     # Task 2: Task thông báo kết quả

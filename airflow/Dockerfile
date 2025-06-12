@@ -15,3 +15,5 @@ RUN apt-get update && apt-get install -y libnss3 libatk1.0-0 libxss1 libasound2 
 # Trở lại user airflow
 USER airflow
 
+ENV PATH=/home/airflow/.local/bin:$PATH \
+    PYTHONPATH=/home/airflow/.local/lib/python3.12/site-packages:$PYTHONPATH

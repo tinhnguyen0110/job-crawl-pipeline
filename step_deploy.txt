@@ -30,8 +30,8 @@ kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
     iam.gke.io/gcp-service-account=litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
 
 ### Deploy airflow to gke
-docker build -t gcr.io/alpine-figure-461007-i9/custom-airflow:v1 .
-docker push gcr.io/alpine-figure-461007-i9/custom-airflow:v1
+docker build -t gcr.io/alpine-figure-461007-i9/custom-airflow:latest .
+docker push gcr.io/alpine-figure-461007-i9/custom-airflow:latest
 
 kubectl create namespace airflow
 
@@ -82,3 +82,5 @@ airflow users create \
     --lastname User \
     --role Admin \
     --email admin@example.com
+
+docker run -it gcr.io/alpine-figure-461007-i9/airflow-custom:latest bash

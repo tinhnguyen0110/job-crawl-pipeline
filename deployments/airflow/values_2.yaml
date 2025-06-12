@@ -1,14 +1,18 @@
 executor: "KubernetesExecutor"
 
-image:
-  repository: gcr.io/alpine-figure-461007-i9/custom-airflow:v1
-  pullPolicy: Always
+images:
+  airflow:
+    repository: gcr.io/alpine-figure-461007-i9/custom-airflow
+    tag: latest
+    pullPolicy: Always
 
 serviceAccount:
   create: false
   name: airflow-ksa
 
-
+extraPipPackages:
+  - dateparser
+  - playwright
 
 dags:
   persistence:
@@ -19,7 +23,7 @@ dags:
     branch: deploy_gke
     subPath: airflow/dags  # thư mục chứa DAGs trong repo
     depth: 1
-    wait: 5
+    wait: 10
     sshKeySecret: airflow-git-ssh-key
     # sshKnownHosts: |
     #   github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
