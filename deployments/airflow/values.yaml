@@ -1,41 +1,67 @@
-# values.yaml
+executor: "KubernetesExecutor"
 
-# 1. Chỉ định image tùy chỉnh từ Artifact Registry
-images:
-  repository: a_placeholder_for_image_repository # Sẽ được thay thế bằng lệnh bên dưới
-  tag: a_placeholder_for_image_tag             # Sẽ được thay thế bằng lệnh bên dưới
+airflow:
+  image:
+    repository: gcr.io/YOUR_PROJECT_ID/airflow-custom  # <-- thay bằng Docker image của bạn
+    tag: latest
+    pullPolicy: Always
 
-# 2. Chọn Executor
-executor: KubernetesExecutor
+  config:
+    AIRFLOW__CORE__EXECUTOR: KubernetesExecutor
+    AIRFLOW__CORE__FERNET_KEY: "YOUR_FERNET_KEY"  # tạo bằng: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://<db_user>:<db_pass>@127.0.0.1:5432/<db_name>
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
 
-# 3. Cấu hình DAGs (ví dụ: gitSync)
+  users:
+    - username: admin
+      password: admin
+      role: Admin
+      email: admin@example.com
+      firstName: Admin
+      lastName: User
+
+  extraEnv:
+    - name: CLOUD_SQL_INSTANCE
+      value: "your-gcp-project:your-region:your-instance-name"
+    - name: DB_USER
+      value: "<db_user>"
+    - name: DB_PASS
+      value: "<db_pass>"
+    - name: DB_NAME
+      value: "<db_name>"
+
 dags:
-  persistence:
-    enabled: false
   gitSync:
     enabled: true
-    repo: "https://github.com/your-username/your-airflow-dags-repo.git"
+    repo: "https://github.com/your-org/your-dags-repo.git"
     branch: "main"
-    # Nếu repo private, bạn cần tạo K8s secret và tham chiếu tại đây
-    # credentialsSecret: "git-credentials-secret"
+    subPath: ""
+    syncInterval: 60
+    credentialsSecret: ""  # dùng nếu private repo
 
-# 4. Cấu hình Webserver Secret Key
-webserverSecretKey: "YOUR_GENERATED_WEBSERVER_SECRET_KEY" # Tạo bằng: openssl rand -hex 30
+webserver:
+  service:
+    type: LoadBalancer
+    port: 8080
 
-# 5. Cấu hình cơ sở dữ liệu
-# Khuyến nghị sử dụng Cloud SQL cho môi trường production thay vì PostgreSQL trong cluster
-# Nhưng để đơn giản, ta vẫn dùng PostgreSQL của chart
+logs:
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: "standard"
+
 postgresql:
-  enabled: false
+  enabled: false  # ❌ Tắt PostgreSQL tích hợp, bạn đã có Cloud SQL riêng
 
-# 6. (Nâng cao & Khuyến nghị) Cấu hình Workload Identity
-# Giúp các pod Airflow có quyền truy cập các dịch vụ GCP khác (GCS, BigQuery)
-# một cách an toàn mà không cần key file.
-# Để sử dụng, bạn cần tạo Google Service Account (GSA) và Kubernetes Service Account (KSA)
-# và liên kết chúng với nhau.
-# Bỏ comment phần dưới nếu bạn đã cấu hình Workload Identity
-# serviceAccount:
-#   create: true
-#   name: "airflow-ksa" 
-#   annotations:
-#     iam.gke.io/gcp-service-account: "your-gsa-name@${PROJECT_ID}.iam.gserviceaccount.com"
+redis:
+  enabled: false  # ❌ Nếu không dùng CeleryExecutor thì không cần Redis
+
+scheduler:
+  replicas: 1
+
+workers:
+  enabled: false  # KubernetesExecutor không cần worker
+
+triggerer:
+  replicas: 1

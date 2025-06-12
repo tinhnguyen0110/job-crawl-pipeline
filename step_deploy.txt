@@ -1,0 +1,36 @@
+PROJECT_ID: alpine-figure-461007-i9 
+
+
+### Kiểm tra trạng thái
+kubectl create namespace model-serving
+kubectl get pods -n model-serving
+kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
+
+### tạo Workload Identity
+1. Tạo IAM Service Account (GSA):
+    gcloud iam service-accounts create litellm-proxy-gsa \
+    --project=alpine-figure-461007-i9
+
+2. Tạo Kubernetes Service Account (KSA):
+    kubectl create serviceaccount litellm-proxy-ksa -n airflow
+
+3. Liên kết GSA với KSA:
+    gcloud iam service-accounts add-iam-policy-binding \
+    litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com \
+    --role=roles/iam.workloadIdentityUser \
+    --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog:litellm-proxy-ksa"
+
+4. thêm annotate ksa
+    kubectl annotate serviceaccount litellm-proxy-ksa \
+    --namespace airflow \
+    iam.gke.io/gcp-service-account=litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+
+### Deploy airflow to gke
+kubectl create namespace airflow
+helm repo add apache-airflow https://airflow.apache.org
+helm repo update
+
+helm upgrade --install airflow apache-airflow/airflow \
+  --namespace airflow \
+  --create-namespace \
+  -f values.yaml
