@@ -48,7 +48,7 @@ def crawl_jobstreet_to_local_callable(**kwargs):
             base_url = "https://www.jobstreet.vn"
             page_num = 1
             
-            while page_num <= 2:
+            while page_num <= 4:
                 logger.info(f"🔄 Đang xử lý trang {page_num} tại URL: {page.url}")
                 
                 try:

@@ -96,10 +96,10 @@ workers:
   extraContainers:
     - name: cloud-sql-proxy
       image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
-      command:
-        - "/cloud_sql_proxy"
-        - "--structured-logs"
-        - "-instances=alpine-figure-461007-i9:asia-southeast1:job-pipeline-db=tcp:5432"
+      args:
+      - "--structured-logs"
+      - "--port=5432"
+      - "alpine-figure-461007-i9:asia-southeast1:job-pipeline-db"
       securityContext:
         runAsNonRoot: true
 
