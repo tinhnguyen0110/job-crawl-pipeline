@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import SQLAlchemyError
 from .database import METADATA, JOBS_TABLE
-
+from .io_utils import save_data_to_destination
 logger = logging.getLogger(__name__)
 
 def _close_popups(page: Page):
@@ -32,21 +32,11 @@ def safe_click(page, job_card):
 
 
 def crawl_jobstreet_to_local_callable(**kwargs):
-    logical_date = kwargs["ds"]
-    run_id = kwargs["run_id"]
     params = kwargs.get("params", {})
     start_url = params.get("start_url")
     if not start_url:
         raise ValueError("Không tìm thấy 'start_url' trong params của DAG.")
-
-    safe_run_id = run_id.replace(":", "_").replace("+", "_")
-    output_dir = f"/opt/airflow/data/{logical_date}"
-    output_filename = f"{safe_run_id}.json"
-    output_file_path = os.path.join(output_dir, output_filename)
-
-    logger.info(f"🚀 Bắt đầu crawl từ URL: {start_url}")
-    logger.info(f"📁 File output sẽ được lưu tại: {output_file_path}")
-    os.makedirs(output_dir, exist_ok=True)
+    
     scraped_data = []
 
     try:
@@ -145,10 +135,18 @@ def crawl_jobstreet_to_local_callable(**kwargs):
         logger.warning("Không crawl được dữ liệu nào.")
         return None
 
-    logger.info(f"Ghi {len(scraped_data)} jobs vào file {output_file_path}")
-    with open(output_file_path, "w", encoding="utf-8") as f:
-        json.dump(scraped_data, f, indent=2, ensure_ascii=False)
-    return output_file_path
+
+    # logger.info(f"Ghi {len(scraped_data)} jobs vào file {output_file_path}")
+    # with open(output_file_path, "w", encoding="utf-8") as f:
+    #     json.dump(scraped_data, f, indent=2, ensure_ascii=False)
+        
+    final_path = save_data_to_destination(
+        data_to_save=scraped_data,
+        logical_date=kwargs["ds"],
+        run_id=kwargs["run_id"]
+    )
+        
+    return final_path
 
 def load_raw_json_to_sql_callable(**kwargs):
     ti = kwargs['ti']
