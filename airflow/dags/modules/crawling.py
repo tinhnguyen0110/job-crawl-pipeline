@@ -6,6 +6,7 @@ from playwright.sync_api import sync_playwright, Page, TimeoutError as Playwrigh
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import SQLAlchemyError
+from google.cloud import storage
 from .database import METADATA, JOBS_TABLE
 from .io_utils import save_data_to_destination
 logger = logging.getLogger(__name__)
@@ -148,6 +149,40 @@ def crawl_jobstreet_to_local_callable(**kwargs):
         
     return final_path
 
+def _read_data_from_path(file_path: str) -> list:
+    """
+    Hàm phụ trợ thông minh, đọc dữ liệu JSON từ một đường dẫn bất kỳ.
+    Đường dẫn có thể là GCS (gs://...) hoặc local.
+    Trả về một list chứa dữ liệu.
+    """
+    logger.info(f"Đang đọc dữ liệu từ đường dẫn: {file_path}")
+    
+    if file_path.startswith('gs://'):
+        # Kịch bản đọc từ Google Cloud Storage
+        try:
+            client = storage.Client()
+            bucket_name, blob_name = file_path.replace("gs://", "").split("/", 1)
+            blob = client.bucket(bucket_name).blob(blob_name)
+            json_content = blob.download_as_text()
+            logger.info("Đọc file từ GCS thành công.")
+            return json.loads(json_content)
+        except Exception as e:
+            logger.error(f"Lỗi khi đọc file từ GCS tại '{file_path}': {e}")
+            raise
+    else:
+        # Kịch bản đọc từ local filesystem
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                logger.info("Đọc file từ local thành công.")
+                return json.load(f)
+        except FileNotFoundError:
+            logger.error(f"Lỗi: Không tìm thấy file tại đường dẫn local '{file_path}'.")
+            raise
+        except json.JSONDecodeError as e:
+            logger.error(f"Lỗi parse JSON trong file '{file_path}': {e}")
+            raise
+
+
 def load_raw_json_to_sql_callable(**kwargs):
     ti = kwargs['ti']
     input_file_path = ti.xcom_pull(task_ids='crawl_and_save_locally_task')
@@ -155,6 +190,8 @@ def load_raw_json_to_sql_callable(**kwargs):
         logger.warning("Không có file để xử lý. Bỏ qua.")
         return
 
+    data_to_load = _read_data_from_path(file_path=input_file_path)
+        
     db_user = os.environ.get("DB_USER", "postgres")
     db_pass = os.environ.get("DB_PASS", "123456")
     db_name = os.environ.get("DB_NAME", "job_db")
@@ -163,8 +200,7 @@ def load_raw_json_to_sql_callable(**kwargs):
     db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
     engine = create_engine(db_url)
     
-    with open(input_file_path, 'r', encoding='utf-8') as f:
-        data_to_load = json.load(f)
+
     
     if not data_to_load:
         logger.info("File dữ liệu rỗng.")
