@@ -56,7 +56,7 @@ def _call_litellm(prompt,model) -> dict:
         # THAY ĐỔI CHO GKE 1: Cấu hình hardcode
         # Endpoint giờ đây là DNS nội bộ của Kubernetes
         # Dạng: http://<tên-service>.<tên-namespace>.svc.cluster.local:<port>/<path>
-        endpoint = "http://host.docker.internal:9000/chat/completions" # <-- THAY THẾ BẰNG TÊN SERVICE & NAMESPACE CỦA BẠN
+        endpoint = "http://127.0.0.1:9000/chat/completions" # <-- THAY THẾ BẰNG TÊN SERVICE & NAMESPACE CỦA BẠN
         api_key = "sk-SlN5E-XYkuaI02FUeZxV9g" # <-- ## TODO: Chuyển vào Airflow Connection sau này
 
         headers = {"Authorization": f"Bearer {api_key}"}
@@ -74,10 +74,10 @@ def _call_litellm(prompt,model) -> dict:
 
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Lỗi mạng hoặc HTTP khi gọi model: {e}")
-        return {"error": f"API call failed: {e}"}
+        raise ValueError(f"API call failed: {e}") from e
     except Exception as e:
         logger.error(f"❌ Lỗi không mong muốn trong hàm _call_litellm: {e}")
-        return {"error": f"An unexpected error occurred: {e}"}
+        raise ValueError(f"API call failed: {e}") from e
 
 def _parse_post_date(time_posted, date_crawled_str):
     """Hàm tiện ích để parse ngày, cần chuyển đổi date_crawled_str thành datetime."""
@@ -134,58 +134,60 @@ def process_jobs_and_update_db_callable(**kwargs):
             for job in jobs_to_process:
                 job_id = job['id']
                 logger.info(f"🔄 Đang xử lý job ID {job_id}: {job['title']}")
+                try:
+                    # Gọi LLM để xử lý title và description
+                    title_result = _call_litellm(PROMPT_TITLE.format(title=job['title']), model_name_to_save)
+                    desc_result = _call_litellm(PROMPT_DESCRIPTION.format(description=job['description']), model_name_to_save)
+                    # Tính toán ngày đăng
+                    post_date = _parse_post_date(job['time_posted'], job['crawled_at'])
 
-                # Gọi LLM để xử lý title và description
-                title_result = _call_litellm(PROMPT_TITLE.format(title=job['title']), model_name_to_save)
-                desc_result = _call_litellm(PROMPT_DESCRIPTION.format(description=job['description']), model_name_to_save)
+                    # Tổng hợp dữ liệu cuối cùng
+                    final_data = {
+                        "raw_job_id": job_id,
+                        "job_title": title_result.get("job_title"),
+                        "seniority": title_result.get("seniority"),
+                        "company": job['company'],
+                        "location": desc_result.get("location"),
+                        "salary": desc_result.get("salary"),
+                        "job_description": desc_result.get("job_description"),
+                        "job_requirements": desc_result.get("job_requirements"),
+                        "benefits": desc_result.get("benefits"),
+                        "date_posted": post_date,
+                        "model": model_name_to_save
+                    }
+
+                    # Bắt đầu transaction để đảm bảo toàn vẹn dữ liệu
+                    with connection.begin() as transaction:
+                        try:
+                            # 4. INSERT vào bảng processed_jobs
+                            # SỬA Ở ĐÂY: Dùng pg_insert() thay vì .insert()
+                            insert_stmt = pg_insert(PROCESSED_JOBS_TABLE).values(final_data)
+
+                            # Phần còn lại giữ nguyên, bây giờ nó sẽ hoạt động
+                            upsert_stmt = insert_stmt.on_conflict_do_update(
+                                index_elements=['raw_job_id'],
+                                set_={
+                                    # Cập nhật tất cả các cột trừ cột id và raw_job_id
+                                    col.name: getattr(insert_stmt.excluded, col.name) 
+                                    for col in PROCESSED_JOBS_TABLE.c 
+                                    if col.name not in ['id', 'raw_job_id']
+                                }
+                            )
+                            connection.execute(upsert_stmt)
+
+                            # 5. UPDATE cờ trong bảng jobs (giữ nguyên)
+                            update_stmt = JOBS_TABLE.update().where(JOBS_TABLE.c.id == job_id).values(processed=True)
+                            connection.execute(update_stmt)
+
+                            logger.info(f"✅ Đã xử lý thành công job ID: {job_id}")
+                            processed_count += 1
+                        except Exception as e:
+                            logger.error(f"❌ Lỗi khi xử lý job ID {job_id}. Lỗi: {e}. Bỏ qua job này.")
+                            continue
+                except Exception as e:
+                    logger.error(f"❌ Lỗi không xác định trong quá trình xử lý job ID {job_id}: {e}", exc_info=True)
+                    continue 
                 
-                # Tính toán ngày đăng
-                post_date = _parse_post_date(job['time_posted'], job['crawled_at'])
-
-                # Tổng hợp dữ liệu cuối cùng
-                final_data = {
-                    "raw_job_id": job_id,
-                    "job_title": title_result.get("job_title"),
-                    "seniority": title_result.get("seniority"),
-                    "company": job['company'],
-                    "location": desc_result.get("location"),
-                    "salary": desc_result.get("salary"),
-                    "job_description": desc_result.get("job_description"),
-                    "job_requirements": desc_result.get("job_requirements"),
-                    "benefits": desc_result.get("benefits"),
-                    "date_posted": post_date,
-                    "model": model_name_to_save
-                }
-
-                # Bắt đầu transaction để đảm bảo toàn vẹn dữ liệu
-                with connection.begin() as transaction:
-                    try:
-                        # 4. INSERT vào bảng processed_jobs
-                        # SỬA Ở ĐÂY: Dùng pg_insert() thay vì .insert()
-                        insert_stmt = pg_insert(PROCESSED_JOBS_TABLE).values(final_data)
-
-                        # Phần còn lại giữ nguyên, bây giờ nó sẽ hoạt động
-                        upsert_stmt = insert_stmt.on_conflict_do_update(
-                            index_elements=['raw_job_id'],
-                            set_={
-                                # Cập nhật tất cả các cột trừ cột id và raw_job_id
-                                col.name: getattr(insert_stmt.excluded, col.name) 
-                                for col in PROCESSED_JOBS_TABLE.c 
-                                if col.name not in ['id', 'raw_job_id']
-                            }
-                        )
-                        connection.execute(upsert_stmt)
-
-                        # 5. UPDATE cờ trong bảng jobs (giữ nguyên)
-                        update_stmt = JOBS_TABLE.update().where(JOBS_TABLE.c.id == job_id).values(processed=True)
-                        connection.execute(update_stmt)
-
-                        logger.info(f"✅ Đã xử lý thành công job ID: {job_id}")
-                        processed_count += 1
-                    except Exception as e:
-                        logger.error(f"Lỗi khi ghi dữ liệu cho job ID {job_id}: {e}. Hủy bỏ transaction.")
-                        transaction.rollback()
-        
     except SQLAlchemyError as e:
         logger.error(f"❌ Lỗi kết nối hoặc thực thi SQL: {e}", exc_info=True)
         raise
