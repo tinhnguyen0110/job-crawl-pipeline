@@ -121,7 +121,7 @@ def process_jobs_and_update_db_callable(**kwargs):
 
             # --- 2. Lấy dữ liệu cần xử lý ---
             # Lấy 3 jobs chưa xử lý để làm việc trong một lần chạy
-            select_query = text("SELECT id, title, company, description, time_posted, crawled_at FROM raw_jobs WHERE processed = FALSE LIMIT 3;")
+            select_query = text("SELECT id, title, company, description, time_posted, crawled_at FROM raw_jobs WHERE processed = FALSE;")
             jobs_to_process = connection.execute(select_query).mappings().all()
 
             if not jobs_to_process:
