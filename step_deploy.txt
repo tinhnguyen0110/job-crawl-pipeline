@@ -7,6 +7,8 @@ kubectl get pods -n model-serving
 kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
 
 
+
+
 ### tạo Workload Identity
 1. Tạo IAM Service Account (GSA):
     gcloud iam service-accounts create cloudsql-proxy-gsa \
