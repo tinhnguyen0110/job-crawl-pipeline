@@ -195,8 +195,8 @@ def load_raw_json_to_sql_callable(**kwargs):
     db_user = os.environ.get("DB_USER", "postgres")
     db_pass = os.environ.get("DB_PASS", "123456")
     db_name = os.environ.get("DB_NAME", "job_db")
-    db_host = os.environ.get("DB_HOST", "host.docker.internal")
-    db_port = os.environ.get("DB_PORT", "5431")
+    db_host = os.environ.get("DB_HOST", "127.0.0.1")
+    db_port = os.environ.get("DB_PORT", "5432")
     db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
     engine = create_engine(db_url)
     
