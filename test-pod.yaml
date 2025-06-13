@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: workload-identity-test-pod
+  namespace: airflow
+spec:
+  # Rất quan trọng: Sử dụng chính xác KSA của Airflow
+  serviceAccountName: airflow-ksa
+  containers:
+  - name: test-container
+    # Sử dụng một image có sẵn các công cụ của Google Cloud
+    image: google/cloud-sdk:slim
+    # Giữ cho container chạy để chúng ta có thể truy cập vào
+    command: ["/bin/bash", "-c", "sleep 3600"]

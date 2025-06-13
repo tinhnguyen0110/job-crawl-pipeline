@@ -1,5 +1,10 @@
 executor: "KubernetesExecutor"
 
+# kubernetesExecutor:
+#   deleteWorkerPods: false   # <- giữ lại pod
+#   workerContainerRepository: gcr.io/alpine-figure-461007-i9/custom-airflow
+#   workerContainerTag: latest
+
 images:
   airflow:
     repository: gcr.io/alpine-figure-461007-i9/custom-airflow
@@ -10,9 +15,32 @@ serviceAccount:
   create: false
   name: airflow-ksa
 
+workers:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+scheduler:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+webserver:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+triggerer:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+
+
 extraPipPackages:
   - dateparser
   - playwright
+
 
 dags:
   persistence:
@@ -40,6 +68,19 @@ logs:
   persistence:
     enabled: false
 
+config:
+  kubernetes:
+    # Giữ lại các pod đã hoàn thành để debug
+    delete_worker_pods: "False"
+  # Cấu hình cho việc ghi log
+  logging:
+    remote_logging: "True"
+    # Đường dẫn đến bucket GCS của bạn
+    remote_base_log_folder: "gs://airflow-logs-tinhnv-gke/logs"
+    # Sử dụng connection mặc định của môi trường Google Cloud
+    # Airflow sẽ tự động dùng Workload Identity để xác thực
+    remote_log_conn_id: "google_cloud_default"
+
 postgresql:
   enabled: true  # ❌ Tắt PostgreSQL tích hợp, bạn đã có Cloud SQL riêng
   persistence:
@@ -49,6 +90,9 @@ postgresql:
         - ReadWriteOnce
 
 workers:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
   extraContainers:
     - name: cloud-sql-proxy
       image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
@@ -80,3 +124,4 @@ workers:
 #         - "-instances=alpine-figure-461007-i9:asia-southeast1:job-pipeline-db=tcp:5432"
 #       securityContext:
 #         runAsNonRoot: true
+

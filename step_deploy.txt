@@ -6,28 +6,32 @@ kubectl create namespace model-serving
 kubectl get pods -n model-serving
 kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
 
+
 ### tạo Workload Identity
 1. Tạo IAM Service Account (GSA):
-    gcloud iam service-accounts create litellm-proxy-gsa \
+    gcloud iam service-accounts create cloudsql-proxy-gsa \
     --project=alpine-figure-461007-i9
 
     gcloud projects add-iam-policy-binding alpine-figure-461007-i9 --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" --role="roles/container.developer"
     gcloud projects add-iam-policy-binding alpine-figure-461007-i9 --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" --role="roles/cloudsql.client"
 
 2. Tạo Kubernetes Service Account (KSA):
-    kubectl create serviceaccount litellm-proxy-ksa -n airflow
+    kubectl create serviceaccount airflow-ksa -n airflow
     
 3. Liên kết GSA với KSA:
     gcloud iam service-accounts add-iam-policy-binding \
-    litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com \
-    --role=roles/iam.workloadIdentityUser \
-    --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog:litellm-proxy-ksa"
-
+    --role="roles/iam.workloadIdentityUser" \
+    --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog[airflow/airflow-ksa]" \
+    cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
 
 4. thêm annotate ksa
-    kubectl annotate serviceaccount litellm-proxy-ksa \
+    kubectl annotate serviceaccount airflow-ksa \
     --namespace airflow \
-    iam.gke.io/gcp-service-account=litellm-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account=cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com --overwrite
+##
+gcloud container clusters update alpine-figure-461007-i9-gke-basic  \
+  --workload-pool=alpine-figure-461007-i9.svc.id.goog \
+  --region asia-southeast1-a
 
 ### Deploy airflow to gke
 docker build -t gcr.io/alpine-figure-461007-i9/custom-airflow:latest .
@@ -59,11 +63,10 @@ helm uninstall airflow -n airflow
 
 helm repo add apache-airflow https://airflow.apache.org
 helm repo update
+helm upgrade --install airflow apache-airflow/airflow -f deployments/airflow/values_2.yaml
 
-helm upgrade --install airflow apache-airflow/airflow ^
-  -n airflow ^
-  -f deployments/airflow/values_2.yaml ^
-  --debug --timeout 7m
+kubectl apply -f deployments/airflow/pvc.yaml 
+
 
 ## Tạo Gitsync cho Airflow
     kubectl create secret generic git-credentials --from-file=.git.env -n airflow
@@ -84,3 +87,30 @@ airflow users create \
     --email admin@example.com
 
 docker run -it gcr.io/alpine-figure-461007-i9/airflow-custom:latest bash
+kubectl delete pods --all -n airflow
+
+gcloud storage buckets create gs://airflow-logs-tinhnv-gke \
+  --project=alpine-figure-461007-i9 \
+  --location=asia-southeast1 \
+  --uniform-bucket-level-access
+
+gsutil iam ch \
+  serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com:objectAdmin \
+  gs://airflow-logs-tinhnv-gke
+gsutil ls gs://airflow-logs-tinhnv-gke
+
+gcloud storage buckets get-iam-policy gs://airflow-logs-tinhnv-gke \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:'serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com'" \
+  --format="table(bindings.role)"
+
+gcloud container clusters describe alpine-figure-461007-i9-gke-basic  \
+  --region asia-southeast1-a \
+  --format="value(workloadIdentityConfig.workloadPool)"
+
+gcloud storage buckets add-iam-policy-binding airflow-logs-tinhnv-gke ^
+  --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" ^
+  --role="roles/storage.objectAdmin"
+
+
+helm template airflow apache-airflow/airflow -n airflow -f deployments\airflow\values_2.yaml > rendered-manifests.yaml

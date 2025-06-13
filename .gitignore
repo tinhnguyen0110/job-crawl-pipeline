@@ -23,5 +23,6 @@ data/
 airflow.db
 *.pid
 *.history
-
+default-values.yaml
 airflow-gitsync
+rendered-manifests.yaml
