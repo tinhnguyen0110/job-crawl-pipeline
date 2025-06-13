@@ -106,11 +106,12 @@ def process_jobs_and_update_db_callable(**kwargs):
     db_user = "postgres"
     db_pass = "123456"
     db_name = "job_db"
-    db_host = "host.docker.internal"
-    db_port = 5431
+    db_host = "127.0.0.1"
+    db_port = 5432
 
     db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
     engine = create_engine(db_url)
+    
     model_name_to_save = "gemini-1.5-flash" # TODO: Lấy từ Airflow Variable sau này
 
     processed_count = 0
