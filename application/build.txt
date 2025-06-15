@@ -1,0 +1,105 @@
+#### **Bước 1: Build và Đẩy Docker Image**
+
+Đảm bảo bạn đang ở trong thư mục chứa `app.py`, `requirements.txt`, và `Dockerfile`.
+
+1.  **Lấy Project ID của bạn:**
+    ```bash
+    gcloud config get-value project
+    ```
+    
+2.  **Build và Push Image** (Sử dụng GCR hoặc Artifact Registry):
+    ```bash
+    # Thay alpine-figure-461007-i9 bằng Project ID của bạn
+    export IMAGE_PATH="gcr.io/alpine-figure-461007-i9/streamlit-job-app:v1"
+    
+    # Build image
+    docker build -t gcr.io/alpine-figure-461007-i9/streamlit-job-app:v1 .
+    # Push image
+    docker push $IMAGE_PATH
+    ```
+
+---
+
+#### **Bước 2: Chuẩn bị Namespace và Workload Identity**
+
+Chúng ta sẽ tạo một namespace `app` riêng biệt và một cặp KSA/GSA cho nó.
+
+1.  **Tạo Namespace:**
+    ```bash
+    kubectl create namespace app
+    ```
+2.  **Tạo Kubernetes Service Account (KSA):**
+    ```bash
+    kubectl create serviceaccount streamlit-app-ksa -n app
+    ```
+3.  **Liên kết KSA với Google Service Account (GSA) của bạn:**
+    Chúng ta sẽ tái sử dụng GSA `cloudsql-proxy-gsa` mà bạn đã tạo cho Airflow, vì nó đã có quyền `Cloud SQL Client`.
+    ```bash
+    # Thay alpine-figure-461007-i9
+    gcloud iam service-accounts add-iam-policy-binding ^
+      --role="roles/iam.workloadIdentityUser" ^
+      --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog[app/streamlit-app-ksa]" ^
+      cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+    ```
+4.  **Gắn Annotation cho KSA:**
+    ```bash
+    kubectl annotate serviceaccount streamlit-app-ksa -n app ^
+      iam.gke.io/gcp-service-account=cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+    ```
+
+---
+
+#### **Bước 3: Tạo Secret cho Database trong Namespace `app`**
+
+```bash
+kubectl create secret generic streamlit-db-credentials -n app ^
+  --from-literal=DB_USER=postgres ^
+  --from-literal=DB_PASS=123456 ^
+  --from-literal=DB_NAME=job_db
+```
+
+---
+
+#### **Bước 4: Tạo file Manifest Kubernetes**
+
+Tạo một file mới tên là `streamlit-deployment.yaml` và dán toàn bộ nội dung dưới đây vào.
+
+# --- Service: Mở cổng cho các Pod khác trong cluster có thể truy cập ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-app-service
+  namespace: app
+spec:
+  selector:
+    app: streamlit-job-app
+  ports:
+    - protocol: TCP
+      port: 80 # Cổng mà Service sẽ mở
+      targetPort: 8501 # Cổng mà container Streamlit đang lắng nghe
+```
+
+---
+
+#### **Bước 5: Triển khai lên GKE**
+
+Áp dụng file manifest bạn vừa tạo:
+```bash
+kubectl delete deployment streamlit-app-deployment -n app
+kubectl apply -f streamlit-deployment.yaml
+```
+kubectl delete pod --all -n app
+
+---
+
+#### **Bước 6: Truy cập ứng dụng**
+
+Sau khi Pod đã chạy (kiểm tra bằng `kubectl get pods -n app`), cách dễ nhất để truy cập ứng dụng từ máy local của bạn là dùng `port-forward`.
+
+Mở một terminal mới và chạy:
+```bash
+kubectl port-forward svc/streamlit-app-service 8080:80 -n app
+```
+Lệnh này sẽ tạo một đường hầm từ cổng `8080` trên máy bạn đến cổng `80` của Service trong GKE.
+
+Bây giờ, hãy mở trình duyệt và truy cập: **`http://localhost:8080`**. Bạn sẽ thấy ứng dụng Streamlit của mì

@@ -1,0 +1,62 @@
+
+# image:
+#   # Use "ghcr.io/berriai/litellm-database" for optimized image with database
+#   repository: ghcr.io/berriai/litellm-database
+#   pullPolicy: Always
+#   # Overrides the image tag whose default is the chart appVersion.
+#   # tag: "main-latest"
+#   tag: "main-v1.44.6-stable"
+
+#   # Image and tag used for the init container to check and wait for the
+#   #  readiness of the postgres database.
+#   dbReadyImage: docker.io/bitnami/postgresql
+#   dbReadyTag: ""
+
+# Cấu hình cho proxy LiteLLM, sẽ được render thành config.yaml
+# Tham khảo cấu trúc từ litellm-helm/values.yaml (mặc định của chart)
+proxy:
+  users:
+    # Bạn có thể định nghĩa một hoặc nhiều user ở đây
+    - user: "new_admin"                      # Tên đăng nhập mới
+      password: "MyNewSecurePassword!_1"     # Mật khẩu mới
+      role: "admin"                          # Quyền admin (quản lý key, xem chi phí...)
+
+    - user: "viewer"
+      password: "ReadOnlyPassword456"
+      role: "user"                           # Quyền user (chỉ có thể xem dashboard)
+
+# ... các cấu hình khác như postgresql giữ nguyên nếu cần ...
+postgresql:
+  auth:
+    password: "YourCurrentDbPassword"
+    postgresPassword: "YourCurrentDbPassword"
+
+proxy_config:
+  # general_settings sẽ được merge với litellm_settings từ litelmm_v2.yaml
+  general_settings:
+    set_verbose: True # Tương đương --debug hoặc logging chi tiết
+    # master_key: os.environ/PROXY_MASTER_KEY # Nếu bạn muốn sử dụng master key từ env
+  model_list:
+    - model_name: "gemini-1.5-flash"
+      litellm_params:
+        model: "gemini/gemini-1.5-flash-latest"
+        api_key: "os.environ/GOOGLE_API_KEY"
+    - model_name: "gemini-1.5-pro"
+      litellm_params:
+        model: "gemini/gemini-1.5-pro-latest"
+        api_key: "os.environ/GOOGLE_API_KEY"
+    - model_name: "gemini-2.0-flash-lite"
+      litellm_params:
+        model: "gemini/gemini-2.0-flash-lite"
+        api_key: "os.environ/GOOGLE_API_KEY"
+
+
+environmentSecrets:
+  - litellm-secrets # Tên của Secret chứa GOOGLE_API_KEY
+
+---
+apiVersion: v1
+kind: Secret
+metadata: # Định nghĩa metadata vẫn cần thiết để Deployment có thể tham chiếu
+  namespace: litellm-apps
+  name: litellm-secrets

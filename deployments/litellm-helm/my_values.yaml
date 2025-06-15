@@ -1,0 +1,19 @@
+USER-SUPPLIED VALUES:
+environmentSecrets:
+- litellm-secrets
+proxy_config:
+  general_settings:
+    set_verbose: true
+  model_list:
+  - litellm_params:
+      api_key: os.environ/GOOGLE_API_KEY
+      model: gemini/gemini-1.5-flash-latest
+    model_name: gemini-1.5-flash
+  - litellm_params:
+      api_key: os.environ/GOOGLE_API_KEY
+      model: gemini/gemini-1.5-pro-latest
+    model_name: gemini-1.5-pro
+  - litellm_params:
+      api_key: os.environ/GOOGLE_API_KEY
+      model: gemini/gemini-2.0-flash-lite
+    model_name: gemini-2.0-flash-lite

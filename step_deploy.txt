@@ -1,10 +1,10 @@
 PROJECT_ID: alpine-figure-461007-i9 
 
 
-### Kiểm tra trạng thái
+### model serving (Đang bị thiếu step deploy của litellm)
 kubectl create namespace model-serving
 kubectl get pods -n model-serving
-kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
+kubectl port-forward svc/litellm-proxy-deployment 7000:4000 -n test
 
 
 
@@ -114,5 +114,84 @@ gcloud storage buckets add-iam-policy-binding airflow-logs-tinhnv-gke ^
   --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" ^
   --role="roles/storage.objectAdmin"
 
-
+### fix bug
 helm template airflow apache-airflow/airflow -n airflow -f deployments\airflow\values_2.yaml > rendered-manifests.yaml
+
+
+
+
+
+## build app deploy app streamlit lên GKE
+1.  **Lấy Project ID của bạn:**
+    ```bash
+    gcloud config get-value project
+    ```
+    
+2.  **Build và Push Image** (Sử dụng GCR hoặc Artifact Registry):
+    ```bash
+    # Thay alpine-figure-461007-i9 bằng Project ID của bạn
+    export IMAGE_PATH="gcr.io/alpine-figure-461007-i9/streamlit-job-app:v1"
+    
+    # Build image
+    docker build -t gcr.io/alpine-figure-461007-i9/streamlit-job-app:v1 .
+    # Push image
+    docker push $IMAGE_PATH
+    ```
+
+---
+
+#### **Bước 2: Chuẩn bị Namespace và Workload Identity**
+
+Chúng ta sẽ tạo một namespace `app` riêng biệt và một cặp KSA/GSA cho nó.
+
+1.  **Tạo Namespace:**
+    ```bash
+    kubectl create namespace app
+    ```
+2.  **Tạo Kubernetes Service Account (KSA):**
+    ```bash
+    kubectl create serviceaccount streamlit-app-ksa -n app
+    ```
+3.  **Liên kết KSA với Google Service Account (GSA) của bạn:**
+    Chúng ta sẽ tái sử dụng GSA `cloudsql-proxy-gsa` mà bạn đã tạo cho Airflow, vì nó đã có quyền `Cloud SQL Client`.
+    ```bash
+    # Thay alpine-figure-461007-i9
+    gcloud iam service-accounts add-iam-policy-binding ^
+      --role="roles/iam.workloadIdentityUser" ^
+      --member="serviceAccount:alpine-figure-461007-i9.svc.id.goog[app/streamlit-app-ksa]" ^
+      cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+    ```
+4.  **Gắn Annotation cho KSA:**
+    ```bash
+    kubectl annotate serviceaccount streamlit-app-ksa -n app ^
+      iam.gke.io/gcp-service-account=cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com
+    ```
+
+---
+
+#### **Bước 3: Tạo Secret cho Database trong Namespace `app`**
+
+```bash
+kubectl create secret generic streamlit-db-credentials -n app ^
+  --from-literal=DB_USER=postgres ^
+  --from-literal=DB_PASS=123456 ^
+  --from-literal=DB_NAME=job_db
+```
+
+#### **Bước 5: Triển khai lên GKE**
+
+```bash
+kubectl delete deployment streamlit-app-deployment -n app
+kubectl apply -f streamlit-deployment.yaml
+```
+kubectl delete pod --all -n app
+
+---
+
+#### **Bước 6: Truy cập ứng dụng**
+
+
+Mở một terminal mới và chạy:
+```bash
+kubectl port-forward svc/streamlit-app-service 8080:80 -n app
+```

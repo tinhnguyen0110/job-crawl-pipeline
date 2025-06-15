@@ -1,0 +1,39 @@
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-frontend-deployment
+  namespace: application
+  labels:
+    app: react-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: react-frontend
+  template:
+    metadata:
+      labels:
+        app: react-frontend
+    spec:
+      containers:
+      - name: react-frontend-container
+        image: gcr.io/alpine-figure-461007-i9/react-frontend:v2 # THAY BẰNG IMAGE TAG CỦA BẠN
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80 # Cổng mà Nginx đang chạy
+---
+# frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-frontend-service
+  namespace: application
+spec:
+  type: LoadBalancer # QUAN TRỌNG: Tạo ra một IP public để truy cập từ Internet
+  selector:
+    app: react-frontend
+  ports:
+  - protocol: TCP
+    port: 80 # Cổng public mà người dùng sẽ truy cập
+    targetPort: 80 # Cổng mà container Nginx đang lắng nghe

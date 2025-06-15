@@ -1,0 +1,11 @@
+#Step deploy helm Chart for litellm on GKE
+kubectl create ns test
+
+kubectl delete secret litellm-secrets -n test
+kubectl create secret generic litellm-secrets --from-env-file=.litellm.env -n test
+kubectl get secret litellm-secrets -n test
+
+#helm uninstall litellm-proxy-deployment -n test
+helm uninstall lite-helm
+helm upgrade --install litellm-proxy-deployment ./litellm-helm -n test -f litellm-helm\my_values.yaml
+

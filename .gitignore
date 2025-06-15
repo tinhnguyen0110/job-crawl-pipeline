@@ -17,7 +17,7 @@ logs/
 # Credentials / config
 config/config.yaml
 .env
-
+app/
 data/
 # Airflow
 airflow.db
@@ -26,3 +26,4 @@ airflow.db
 default-values.yaml
 airflow-gitsync
 rendered-manifests.yaml
+frontend
