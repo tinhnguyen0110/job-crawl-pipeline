@@ -52,7 +52,7 @@ def crawl_jobstreet_to_local_callable(**kwargs):
                 logger.info(f"🔄 Đang xử lý trang {page_num} tại URL: {page.url}")
                 
                 try:
-                    page.wait_for_selector("div.job-card", timeout=10000)
+                    page.wait_for_selector("div.job-card", timeout=5000)
                     jobs = page.query_selector_all("div.job-card")
                 except Exception as e:
                     logger.error(f"Không tìm thấy job cards: {e}")

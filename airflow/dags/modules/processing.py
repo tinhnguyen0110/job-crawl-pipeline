@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import Table, Column, Integer, String, DateTime
 from .database import JOBS_TABLE, PROCESSED_JOBS_TABLE
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-
+import time
 logger = logging.getLogger(__name__)
 
 # ---------------------- PROMPT TEMPLATES ----------------------
@@ -180,6 +180,7 @@ def process_jobs_and_update_db_callable(**kwargs):
                             connection.execute(update_stmt)
 
                             logger.info(f"✅ Đã xử lý thành công job ID: {job_id}")
+                            time.sleep(10000)  # Giả lập thời gian xử lý
                             processed_count += 1
                         except Exception as e:
                             logger.error(f"❌ Lỗi khi xử lý job ID {job_id}. Lỗi: {e}. Bỏ qua job này.")

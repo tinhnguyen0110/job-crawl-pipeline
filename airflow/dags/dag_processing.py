@@ -11,7 +11,7 @@ from modules.processing import process_jobs_and_update_db_callable
 
 with DAG(
     dag_id="processing_llm_jobs",
-    schedule_interval="0 */1 * * *", # Chạy mỗi giờ một lần để xử lý
+    schedule_interval="0 */3 * * *", # Chạy mỗi giờ một lần để xử lý
     start_date=pendulum.datetime(2025, 6, 12, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
     is_paused_upon_creation=False,
