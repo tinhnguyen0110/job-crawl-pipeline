@@ -13,7 +13,7 @@ with DAG(
     schedule_interval="@daily",
     catchup=False,
     params={
-        "start_url": "https://www.jobstreet.vn/vi%E1%BB%87c-l%C3%A0m-Ai-Engineer",
+        "start_url": "https://www.jobstreet.vn/j?sp=search&trigger_source=serp&q=Engineer&l=",
     },
     tags=["etl", "crawling", "database"],
 ) as dag:
