@@ -16,6 +16,9 @@ with DAG(
     catchup=False,
     is_paused_upon_creation=False,
     max_active_runs=1, # Đảm bảo chỉ có 1 lần chạy xử lý tại một thời điểm
+    params={
+        "time_get_api": 0,
+    },
     tags=['processing', 'llm']
 ) as dag:
 
