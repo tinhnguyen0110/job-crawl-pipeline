@@ -99,6 +99,11 @@ def process_jobs_and_update_db_callable(**kwargs):
     """
     Hàm chính được Airflow gọi, đã được tái cấu trúc hoàn chỉnh cho GKE.
     """
+    params = kwargs.get("params", {})
+    time_get_api = params.get("time_get_api")
+    if not time_get_api:
+        time_get_api = 10 # mặc định 5s gọi 1 lần
+    
     logger.info("Bắt đầu tác vụ xử lý dữ liệu thô bằng LLM...")
 
     # --- 1. Thiết lập kết nối Database ---
@@ -180,7 +185,7 @@ def process_jobs_and_update_db_callable(**kwargs):
                             connection.execute(update_stmt)
 
                             logger.info(f"✅ Đã xử lý thành công job ID: {job_id}")
-                            time.sleep(10000)  # Giả lập thời gian xử lý
+                            time.sleep(time_get_api)  # Giả lập thời gian xử lý
                             processed_count += 1
                         except Exception as e:
                             logger.error(f"❌ Lỗi khi xử lý job ID {job_id}. Lỗi: {e}. Bỏ qua job này.")
