@@ -1,0 +1,120 @@
+### Deploy full system to gke 
+export PROJECT_ID='alpine-figure-461007-i9'
+
+gcloud container clusters get-credentials gke_cluster_name \
+  --region=asia-southeast1 \
+  --project=alpine-figure-461007-i9
+
+
+## Dựng cụm = terraform
+terraform init
+terraform plan
+terraform apply 
+
+gcloud compute addresses create joblytics-static-ip \
+  --project=alpine-figure-461007-i9  \
+  --region=asia-southeast1
+
+## deploy application
+# debug
+helm template my-frontend ./frontend-chart --namespace application
+kubectl port-forward pod/my-frontend-frontend-chart-5d89f5d484-7s8vh 8090:80 -n application
+curl -H "Host: joblytics.io.vn" http://34.54.46.178
+
+# deploy backend
+# build docker 
+export PROJECT_ID=$(gcloud config get-value project)
+export IMAGE_TAG=gcr.io/${PROJECT_ID}/fastapi-backend:v2
+docker build -t ${IMAGE_TAG} .
+docker push ${IMAGE_TAG}
+
+helm uninstall my-backend-release -n application
+
+helm upgrade --install my-backend-release ./deployments/backend-chart/ \
+  --namespace application \
+  --create-namespace \
+  --set appConfig.database.connectionString="postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db"
+
+# deploy frontend
+# build docker
+export PROJECT_ID=$(gcloud config get-value project)
+export IMAGE_TAG=gcr.io/${PROJECT_ID}/react-frontend:v2
+docker build -t ${IMAGE_TAG} .
+docker push ${IMAGE_TAG}
+
+helm uninstall my-frontend -n application
+helm upgrade --install my-frontend ./deployments/frontend-chart --namespace application
+
+### Build  helm Chart for litellm on GKE
+kubectl create ns model-serving
+
+kubectl delete secret litellm-secrets -n model-serving
+kubectl create secret generic litellm-secrets --from-env-file=.litellm.env -n model-serving
+kubectl get secret litellm-secrets -n model-serving
+
+#helm uninstall litellm-proxy-deployment -n model-serving
+helm uninstall litellm-proxy-deployment -n model-serving
+helm upgrade --install litellm-proxy-deployment ./deployments/litellm-helm -n model-serving -f deployments/litellm-helm/my_values.yaml
+# test local
+kubectl port-forward svc/litellm-proxy-deployment 9000:4000 -n model-serving
+
+### Build airflow
+
+kubectl create namespace airflow
+2. Tạo Kubernetes Service Account (KSA):
+kubectl create serviceaccount airflow-ksa -n airflow
+
+3. Liên kết GSA với KSA:
+gcloud iam service-accounts add-iam-policy-binding airflow-sa-crawl2insight@alpine-figure-461007-i9.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:alpine-figure-461007-i9.svc.id.goog[airflow/airflow-ksa]"
+
+4. thêm annotate ksa
+    kubectl annotate serviceaccount airflow-ksa \
+    --namespace airflow \
+    iam.gke.io/gcp-service-account=airflow-sa-crawl2insight@alpine-figure-461007-i9.iam.gserviceaccount.com --overwrite
+
+
+
+## Tạo các secret
+
+# Tạo Gitsync cho Airflow
+kubectl create secret generic git-credentials --from-file=.git.env -n airflow
+
+kubectl create secret generic airflow-db-connection -n airflow \
+  --from-literal=connection='postgresql+psycopg2://postgres:123456@127.0.0.1:5432/airflow'
+
+kubectl create secret generic airflow-git-ssh-key --namespace airflow \
+  --from-file=gitSshKey=./airflow-gitsync
+
+kubectl create secret generic airflow-fernet-key \
+  --from-literal=value='PpwOpKTKaHYo-TuiwCIMSwxNmBJknIf4rV5KctQ_8-k='
+
+kubectl create secret generic airflow-webserver-secret-key \
+  --from-literal=value='b60a4906211cf835536284864f38c421'
+
+kubectl delete secret airflow-webserver-secret-key --namespace airflow
+
+kubectl get secret airflow-webserver-secret-key -n airflow -o yaml
+
+
+kubectl delete secret airflow-db-connection airflow-git-ssh-key airflow-fernet-key airflow-webserver-secret-key --namespace airflow
+kubectl delete secret airflow-webserver-secret-key --namespace airflow
+
+kubectl delete pvc -n airflow --all
+helm uninstall airflow -n airflow
+
+helm repo add apache-airflow https://airflow.apache.org
+helm repo update
+helm upgrade --install airflow apache-airflow/airflow -f deployments/airflow/values.yaml -n airflow
+
+
+## debug
+
+gcloud projects get-iam-policy alpine-figure-461007-i9 \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:airflow-sa@alpine-figure-461007-i9.iam.gserviceaccount.com" \
+  --format="table(bindings.role)"
+
+# kubectl exec -it airflow-scheduler-7c446bc5f9-t6sz5 -- bash
+kubectl port-forward svc/airflow-webserver 8000:8080 -n airflow

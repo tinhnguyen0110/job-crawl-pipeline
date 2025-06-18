@@ -9,3 +9,5 @@ kubectl get secret litellm-secrets -n test
 helm uninstall lite-helm
 helm upgrade --install litellm-proxy-deployment ./litellm-helm -n test -f litellm-helm\my_values.yaml
 
+
+helm uninstall my-backend-release -n application

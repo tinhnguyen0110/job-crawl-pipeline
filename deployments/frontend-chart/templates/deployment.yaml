@@ -1,0 +1,53 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Tên deployment sẽ được tạo tự động và chuẩn hóa bởi Helm
+  name: {{ include "frontend-chart.fullname" . }}
+  labels:
+    {{- include "frontend-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "frontend-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "frontend-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: react-frontend-container
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          volumeMounts:
+            - name: nginx-config-volume # Tên phải khớp với `volumes.name` ở dưới
+              mountPath: /etc/nginx/conf.d/default.conf # Đường dẫn ghi đè config NGINX
+              subPath: default.conf # Tên key trong ConfigMap
+              readOnly: true
+
+          readinessProbe:
+            httpGet:
+              path: / # Hoặc một endpoint sức khỏe cụ thể như /healthz
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 15
+            # Tăng thời gian chờ phản hồi từ 1 giây (mặc định) lên 5 giây
+            timeoutSeconds: 5
+            # Giữ nguyên hoặc tăng nhẹ chu kỳ kiểm tra
+            periodSeconds: 10
+            # Số lần thất bại trước khi Pod bị đánh dấu là Unready
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: nginx-config-volume
+          configMap:
+            name: {{ include "frontend-chart.fullname" . }}-nginx-config

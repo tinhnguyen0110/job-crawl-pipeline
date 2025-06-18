@@ -1,0 +1,63 @@
+# backend-chart/values.yaml
+
+replicaCount: 1
+
+image:
+  repository: gcr.io/alpine-figure-461007-i9/fastapi-backend
+  pullPolicy: Always
+  # tag được để trống, khuyến khích bạn ghi đè khi chạy lệnh helm install/upgrade
+  # Ví dụ: --set image.tag=v3
+  tag: "v2"
+
+# serviceAccount để pod sử dụng, liên kết với Workload Identity
+serviceAccount:
+  # 'true' sẽ tạo một Service Account mới. 'false' sẽ dùng một SA đã có sẵn.
+  create: true
+  # Tên của Service Account sẽ được tạo hoặc sử dụng.
+  name: "fastapi-backend-ksa"
+  gsaEmail: "fastapi-app-sa-crawl2insight@alpine-figure-461007-i9.iam.gserviceaccount.com"
+# Cấu hình cho Service nội bộ (ClusterIP)
+service:
+  type: ClusterIP
+  port: 80         # Cổng của Service
+  targetPort: 8000   # Cổng của container
+
+# Cấu hình cho ứng dụng FastAPI
+appConfig:
+  database:
+    # Tên của Secret chứa thông tin kết nối DB
+    secretName: "db-credentials"
+    # Key bên trong Secret
+    secretKey: "database-url"
+
+# Cấu hình cho container phụ (sidecar) Cloud SQL Auth Proxy
+cloudsql:
+  # Bật/tắt việc triển khai sidecar này
+  enabled: true
+  image:
+    repository: "gcr.io/cloud-sql-connectors/cloud-sql-proxy"
+    tag: "2.10.0"
+  # Tên kết nối đến instance Cloud SQL của bạn
+  instanceConnectionName: "alpine-figure-461007-i9:asia-southeast1:job-pipeline-db"
+  port: 5432
+
+appConfig:
+  database:
+    secretName: "db-credentials"
+    secretKey: "database-url"
+    # Thêm giá trị thật của chuỗi kết nối vào đây
+    # !!! KHÔNG NÊN COMMIT GIÁ TRỊ THẬT NÀY LÊN GIT PUBLIC !!!
+    connectionString: "postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db"
+
+# Cấu hình tài nguyên cho container (rất quan trọng cho production)
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 200m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi

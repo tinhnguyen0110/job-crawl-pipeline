@@ -165,6 +165,7 @@ kubectl apply -f deployments/backend-deployment.yaml
 ## frontend
 
 # Đặt tên và tag cho image
+
 export IMAGE_TAG=gcr.io/${PROJECT_ID}/react-frontend:v2
 
 # Build Docker image

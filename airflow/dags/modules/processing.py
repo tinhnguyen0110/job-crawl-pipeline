@@ -57,7 +57,7 @@ def _call_litellm(prompt,model) -> dict:
         # Endpoint giờ đây là DNS nội bộ của Kubernetes
         # Dạng: http://<tên-service>.<tên-namespace>.svc.cluster.local:<port>/<path>
         endpoint = "http://litellm-proxy-deployment.model-serving:4000/chat/completions" # <-- THAY THẾ BẰNG TÊN SERVICE & NAMESPACE CỦA BẠN
-        api_key = "sk-SlN5E-XYkuaI02FUeZxV9g" # <-- ## TODO: Chuyển vào Airflow Connection sau này
+        api_key = "sk-c_6V_dYyeeB7g_t2YBnIzQ" # <-- ## TODO: Chuyển vào Airflow Connection sau này
 
         headers = {"Authorization": f"Bearer {api_key}"}
         payload = {

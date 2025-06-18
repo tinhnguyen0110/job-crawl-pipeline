@@ -4,7 +4,7 @@ PROJECT_ID: alpine-figure-461007-i9
 ### model serving (Đang bị thiếu step deploy của litellm)
 kubectl create namespace model-serving
 kubectl get pods -n model-serving
-kubectl port-forward svc/litellm-proxy-deployment 7000:4000 -n test
+kubectl port-forward svc/litellm-proxy-deployment 7000:4000 -n model-serving
 
 
 
@@ -81,16 +81,9 @@ kubectl apply -f deployments/airflow/pvc.yaml
 # kubectl exec -it airflow-scheduler-7c446bc5f9-t6sz5 -- bash
 kubectl port-forward svc/airflow-webserver 8000:8080 -n airflow
 
-airflow users create \
-    --username admin1 \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com
 
-docker run -it gcr.io/alpine-figure-461007-i9/airflow-custom:latest bash
-kubectl delete pods --all -n airflow
 
+# create storage bucket
 gcloud storage buckets create gs://airflow-logs-tinhnv-gke \
   --project=alpine-figure-461007-i9 \
   --location=asia-southeast1 \
@@ -106,17 +99,20 @@ gcloud storage buckets get-iam-policy gs://airflow-logs-tinhnv-gke \
   --filter="bindings.members:'serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com'" \
   --format="table(bindings.role)"
 
-gcloud container clusters describe alpine-figure-461007-i9-gke-basic  \
-  --region asia-southeast1-a \
-  --format="value(workloadIdentityConfig.workloadPool)"
-
 gcloud storage buckets add-iam-policy-binding airflow-logs-tinhnv-gke ^
   --member="serviceAccount:cloudsql-proxy-gsa@alpine-figure-461007-i9.iam.gserviceaccount.com" ^
   --role="roles/storage.objectAdmin"
 
-### fix bug
-helm template airflow apache-airflow/airflow -n airflow -f deployments\airflow\values_2.yaml > rendered-manifests.yaml
 
+gcloud container clusters describe alpine-figure-461007-i9-gke-basic  \
+  --region asia-southeast1-a \
+  --format="value(workloadIdentityConfig.workloadPool)"
+
+
+# fix bug
+helm template airflow apache-airflow/airflow -n airflow -f deployments\airflow\values_2.yaml > rendered-manifests.yaml
+docker run -it gcr.io/alpine-figure-461007-i9/airflow-custom:latest bash
+kubectl delete pods --all -n airflow
 
 
 

@@ -1,7 +1,7 @@
 executor: "KubernetesExecutor"
 
 # kubernetesExecutor:
-#   deleteWorkerPods: false   # <- giữ lại pod
+#   deleteWorkerPods: true   # <- giữ lại pod
 #   workerContainerRepository: gcr.io/alpine-figure-461007-i9/custom-airflow
 #   workerContainerTag: latest
 
@@ -14,11 +14,9 @@ images:
 serviceAccount:
   create: false
   name: airflow-ksa
+  # annotations:
+  #   iam.gke.io/gcp-service-account: airflow-sa-crawl2insight@alpine-figure-461007-i9.iam.gserviceaccount.com
 
-workers:
-  serviceAccount:
-    create: false
-    name: airflow-ksa
 
 scheduler:
   serviceAccount:
@@ -27,14 +25,22 @@ scheduler:
 
 webserver:
   serviceAccount:
-    create: false
-    name: airflow-ksa
+      create: false
+      name: airflow-ksa
+  startupProbe:
+    failureThreshold: 30        # Tăng số lần thử
+    periodSeconds: 10           # Cách nhau 10 giây
+    initialDelaySeconds: 30     # Đợi 30s rồi mới bắt đầu probe
+    timeoutSeconds: 5           # Timeout mỗi lần thử
+  livenessProbe:
+    initialDelaySeconds: 60
+    failureThreshold: 10
+  
 
 triggerer:
   serviceAccount:
     create: false
     name: airflow-ksa
-
 
 
 extraPipPackages:
@@ -103,6 +109,7 @@ workers:
       securityContext:
         runAsNonRoot: true
 
+  
 # webserver:
 #   extraContainers:
 #     - name: cloud-sql-proxy

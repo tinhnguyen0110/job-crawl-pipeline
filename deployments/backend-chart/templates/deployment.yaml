@@ -1,0 +1,46 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Tên deployment sẽ được tạo tự động và chuẩn hóa bởi Helm
+  name: {{ include "backend-chart.fullname" . }}
+  labels:
+    {{- include "backend-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "backend-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "backend-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      # Sử dụng Service Account được định nghĩa trong values.yaml
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: fastapi-backend-container
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appConfig.database.secretName }}
+                  key: {{ .Values.appConfig.database.secretKey }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        # Container sidecar cho Cloud SQL Proxy, chỉ được tạo nếu 'cloudsql.enabled' là true
+        {{- if .Values.cloudsql.enabled }}
+        - name: cloud-sql-proxy
+          image: "{{ .Values.cloudsql.image.repository }}:{{ .Values.cloudsql.image.tag }}"
+          args:
+            - "--structured-logs"
+            - "--port={{ .Values.cloudsql.port }}"
+            - "{{ .Values.cloudsql.instanceConnectionName }}"
+          securityContext:
+            runAsNonRoot: true
+        {{- end }}
