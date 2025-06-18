@@ -48,9 +48,8 @@ def crawl_jobstreet_to_local_callable(**kwargs):
             base_url = "https://www.jobstreet.vn"
             page_num = 1
 
-            while page_num <= 20:
+            while page_num:
                 logger.info(f"🔄 Đang xử lý trang {page_num} tại URL: {page.url}")
-                
                 try:
                     page.wait_for_selector("div.job-card", timeout=5000)
                     jobs = page.query_selector_all("div.job-card")
