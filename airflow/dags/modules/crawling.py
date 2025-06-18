@@ -35,6 +35,7 @@ def safe_click(page, job_card):
 def crawl_jobstreet_to_local_callable(**kwargs):
     params = kwargs.get("params", {})
     start_url = params.get("start_url")
+    number_pages = params.get("number_pages")
     if not start_url:
         raise ValueError("Không tìm thấy 'start_url' trong params của DAG.")
     
@@ -48,7 +49,7 @@ def crawl_jobstreet_to_local_callable(**kwargs):
             base_url = "https://www.jobstreet.vn"
             page_num = 1
 
-            while page_num:
+            while page_num <= number_pages:
                 logger.info(f"🔄 Đang xử lý trang {page_num} tại URL: {page.url}")
                 try:
                     page.wait_for_selector("div.job-card", timeout=5000)

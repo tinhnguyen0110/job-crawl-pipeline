@@ -14,6 +14,7 @@ with DAG(
     catchup=False,
     params={
         "start_url": "https://www.jobstreet.vn/j?sp=search&trigger_source=serp&q=Engineer&l=",
+        "number_pages": 20,  # Số trang cần crawl, có thể điều chỉnh
     },
     tags=["etl", "crawling", "database"],
 ) as dag:
