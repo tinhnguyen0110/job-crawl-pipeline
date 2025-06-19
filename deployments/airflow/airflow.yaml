@@ -1,20 +1,9 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: airflow-ui-creds-k8s # Tên K8s Secret do ESO tạo ra
-  namespace: airflow
-type: Opaque
-data:
-  username: YWRtaW4=          # "admin" đã được mã hóa base64
-  password: U1VQRVJfUzNDUkVUIFBBU1NXT1JE # Mật khẩu đã được mã hóa base64
-
----
 executor: "KubernetesExecutor"
 
 images:
   airflow:
     repository: gcr.io/alpine-figure-461007-i9/custom-airflow
-    tag: latest
+    tag: 1.16.0
     pullPolicy: Always
 
 serviceAccount:

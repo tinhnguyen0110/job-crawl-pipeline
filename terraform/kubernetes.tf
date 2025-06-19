@@ -27,6 +27,12 @@ resource "kubernetes_namespace" "platform_services_ns" {
   }
 }
 
+resource "kubernetes_namespace" "secret_ns" {
+  metadata {
+    name = "external-secrets" # Namespace cho External Secrets Operator
+  }
+}
+
 # 2. Tạo Kubernetes Service Accounts (KSA) cho các ứng dụng
 resource "kubernetes_service_account" "airflow_ksa" {
   metadata {
@@ -50,6 +56,17 @@ resource "kubernetes_service_account" "litellm_ksa" {
   }
 }
 
+resource "kubernetes_service_account" "eos_ksa" {
+  metadata {
+    name      = "eos-ksa"
+    namespace = kubernetes_namespace.platform_services_ns.metadata[0].name
+    # Liên kết KSA này với GSA của EOS
+    annotations = {
+      "iam.gke.io/gcp-service-account" = google_service_account.eos_sa.email
+    }
+  }
+}
+
 # 3. Thiết lập liên kết Workload Identity (cho phép KSA "giả danh" GSA)
 resource "google_service_account_iam_member" "airflow_workload_binding" {
   service_account_id = google_service_account.airflow_sa.name
@@ -60,4 +77,11 @@ resource "google_service_account_iam_member" "airflow_workload_binding" {
 resource "google_service_account_iam_member" "litellm_workload_binding" {
   service_account_id = google_service_account.litellm_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.platform_services_ns.metadata[0].name}/${kubernetes_service_account.litellm_ksa.metadata[0].name}]"}
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.platform_services_ns.metadata[0].name}/${kubernetes_service_account.litellm_ksa.metadata[0].name}]"
+  }
+
+resource "google_service_account_iam_member" "eos_workload_binding" {
+  service_account_id = google_service_account.eos_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${kubernetes_namespace.secret_ns.metadata[0].name}/${kubernetes_service_account.eos_ksa.metadata[0].name}]"
+  }

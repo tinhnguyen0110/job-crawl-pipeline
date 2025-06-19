@@ -1,4 +1,6 @@
 gitsync_ssh_private_key = file("airflow-gitsync")
+google_api_key = "AIzaSyAqFlsPpDMXnwc8iJ-WmpAsaozY6AVR-sA"
+litellm_master_key = "sk-1234"
 
 variable "project_id" {
   description = "The GCP project ID to deploy to."

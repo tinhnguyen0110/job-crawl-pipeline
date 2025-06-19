@@ -17,9 +17,17 @@ resource "google_secret_manager_secret" "airflow_fernet_key" {
   }
 }
 
-resource "google_secret_manager_secret" "litellm_openai_api_key" {
+resource "google_secret_manager_secret" "litellm_master_key" {
   project   = var.project_id
-  secret_id = "litellm-openai-api-key"
+  secret_id = "litellm-master-key"
+  replication {
+    automatic = true
+  }
+}
+
+resource "google_secret_manager_secret" "litellm_openai_api_keys" {
+  project   = var.project_id
+  secret_id = "litellm-openai-api-keys"
   replication {
     automatic = true
   }
@@ -48,16 +56,16 @@ resource "google_secret_manager_secret_version" "airflow_fernet_key_v1" {
   secret_data = "PpwOpKTKaHYo-TuiwCIMSwxNmBJknIf4rV5KctQ_8-k="
 }
 
-resource "google_secret_manager_secret_version" "litellm_openai_api_key_v1" {
-  secret      = google_secret_manager_secret.litellm_openai_api_key.id
+resource "google_secret_manager_secret_version" "litellm_openai_api_keys_v1" {
+  secret      = google_secret_manager_secret.litellm_openai_api_keys.id
   secret_data = jsonencode({
-    litellm_openai_api_key = sensitive("AIzaSyAqFlsPpDMXnwc8iJ-WmpAsaozY6AVR-sA")
+    GOOGLE_API_KEY = var.google_api_key
   })
 }
 
 resource "google_secret_manager_secret_version" "litellm_master_key_v1" {
   secret      = google_secret_manager_secret.litellm_master_key.id
-  secret_data = "sk-1234"
+  secret_data = var.litellm_master_key
 }
 
 resource "google_secret_manager_secret_version" "litellm_ui_credentials_v1" {

@@ -22,13 +22,13 @@ service:
   port: 80         # Cổng của Service
   targetPort: 8000   # Cổng của container
 
-# Cấu hình cho ứng dụng FastAPI
-appConfig:
-  database:
-    # Tên của Secret chứa thông tin kết nối DB
-    secretName: "db-credentials"
-    # Key bên trong Secret
-    secretKey: "database-url"
+# # Cấu hình cho ứng dụng FastAPI
+# appConfig:
+#   database:
+#     # Tên của Secret chứa thông tin kết nối DB
+#     secretName: "db-credentials"
+#     # Key bên trong Secret
+#     secretKey: "database-url"
 
 # Cấu hình cho container phụ (sidecar) Cloud SQL Auth Proxy
 cloudsql:

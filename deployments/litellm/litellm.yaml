@@ -1,4 +1,3 @@
-USER-SUPPLIED VALUES:
 environmentSecrets:
 - litellm-secrets
 proxy_config:

@@ -27,7 +27,21 @@ resource "google_project_iam_member" "gitsync_ssh_key_access" {
   member  = "serviceAccount:${google_service_account.gitsync_ssh_key.email}"
 }
 
-#========= cấp quyền cho cụm ứng dụng ===========
+#========= cấp quyền cho External Secrets Operator ===========
+resource "google_service_account" "eos_sa" {
+  project      = var.project_id
+  account_id   = "eos-sa-crawl2insight"
+  display_name = "Service Account for External Secrets Operator"
+}
+
+# Liên kết GSA của eos với KSA trong cluster
+resource "google_service_account_iam_member" "eos_workload_binding" {
+  service_account_id = google_service_account.eos_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[external-secrets/eos-ksa]"
+}
+
+#========= cấp quyền cho GKE Node ============
 resource "google_service_account" "gke_node_sa" {
   project      = var.project_id
   account_id   = "gke-node-sa"
@@ -79,16 +93,6 @@ resource "google_service_account_iam_member" "fastapi_workload_binding" {
 }
 
 #========= cấp quyền cho Airflow ===========
-
-# Quyền đọc secret cho Airflow
-resource "google_secret_manager_secret_iam_member" "airflow_fernet_key_accessor" {
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.airflow_fernet_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.airflow_sa.email}"
-}
-
-
 # Service Account dành riêng cho ứng dụng Airflow
 resource "google_service_account" "airflow_sa" {
   project      = var.project_id
@@ -96,6 +100,12 @@ resource "google_service_account" "airflow_sa" {
   display_name = "Service Account for Airflow"
 }
 
+resource "google_secret_manager_secret_iam_member" "airflow_fernet_key_accessor" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.airflow_fernet_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.airflow_sa.email}"
+}
 
 # Cấp quyền Cloud SQL Client cho GSA của ứng dụng
 resource "google_project_iam_member" "airflow_sa_cloudsql_client" {
