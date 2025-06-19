@@ -1,0 +1,65 @@
+# environments/development.yaml
+
+# Khối `releases` này cho phép bạn ghi đè values cho từng release cụ thể
+# khi chạy với cờ `-e development`
+releases:
+  # === Ghi đè cho release `app-services` ===
+  - name: app-services
+    values:
+      # Sử dụng key `application-umbrella` vì đó là tên chart trong `charts/`
+      # nếu không, bạn cần dùng alias trong helmfile.yaml
+      - application-umbrella:
+          # Chỉ cần 1 replica cho mỗi service để test
+          frontend-chart:
+            replicaCount: 1
+          backend-chart:
+            replicaCount: 1
+
+          # Cấu hình Ingress cho môi trường dev
+          ingress:
+            enabled: true
+            hosts:
+              - host: joblytics.io.vn # Dùng subdomain của dev
+                paths:
+                  - path: /
+                    pathType: Prefix
+                  - path: /api/
+                    pathType: Prefix
+
+
+  # === Ghi đè cho release `airflow-system` ===
+  - name: airflow-system
+    values:
+      # Các giá trị trong file này sẽ ghi đè lên các giá trị mặc định của chart apache-airflow
+      - fullnameOverride: "airflow-dev"
+        workers:
+          replicas: 1 # Chỉ cần 1 worker
+        triggerer:
+          replicas: 1 # Chỉ cần 1 triggerer
+
+        data:
+          fernetKey:
+            existingSecret: "airflow-fernet-key-k8s"
+            existingSecretKey: "fernet-key"
+        extraEnv:
+          - name: AIRFLOW__WEBSERVER__USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: airflow-ui-creds-k8s
+                key: username
+          - name: AIRFLOW__WEBSERVER__PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: airflow-ui-creds-k8s
+                key: password
+
+  # === Ghi đè cho release `litellm-service` ===
+  - name: litellm-service
+    values:
+      - replicaCount: 1
+        extraEnv:
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: litellm-api-keys 
+                key: openai-api-key

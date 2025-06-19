@@ -1,0 +1,12 @@
+dependencies:
+- name: backend-chart
+  repository: file://./charts/backend-chart
+  version: 0.1.0
+- name: airflow
+  repository: https://airflow.apache.org
+  version: 1.16.0
+- name: frontend-chart
+  repository: file://./charts/frontend-chart
+  version: 0.1.0
+digest: sha256:0fdb6ba1c4817b0d34c227c05f08b8625e0f0e80e94d06bc38dd4e2b08e16894
+generated: "2025-06-18T23:40:36.4225523+07:00"

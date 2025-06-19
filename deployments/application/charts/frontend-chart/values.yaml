@@ -1,7 +1,4 @@
-# backend-chart/values.yaml
-
 replicaCount: 1
-
 image:
   repository: gcr.io/alpine-figure-461007-i9/react-frontend
   pullPolicy: Always
@@ -43,10 +40,7 @@ ingress:
         pathType: Prefix
 
 backend:
-  # Tên của Kubernetes service cho backend
-  # Tên này thường có dạng: <tên-release-backend>-<tên-chart-backend>
   serviceName: "my-backend-release-backend-chart"
-  # Port của backend service
   servicePort: 80
 
 ingressClass:

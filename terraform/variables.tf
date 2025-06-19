@@ -1,3 +1,5 @@
+gitsync_ssh_private_key = file("airflow-gitsync")
+
 variable "project_id" {
   description = "The GCP project ID to deploy to."
   type        = string
@@ -39,3 +41,10 @@ variable "gke_cluster_version" {
   type        = string
   default     = null # Let GCP pick the latest stable version
 }
+
+variable "gitsync_ssh_private_key" {
+  description = "The private SSH key content for Git-Sync to clone repos."
+  type        = string
+  sensitive   = true # Rất quan trọng! Terraform sẽ ẩn giá trị này trong output.
+}
+

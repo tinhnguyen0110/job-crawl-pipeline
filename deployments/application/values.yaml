@@ -1,0 +1,6 @@
+frontend-chart:
+  backend:
+    serviceName: "backend-service"
+    servicePort: 80
+backend-chart:
+  fullnameOverride: "backend-service"

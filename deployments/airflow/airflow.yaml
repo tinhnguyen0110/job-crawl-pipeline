@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-ui-creds-k8s # Tên K8s Secret do ESO tạo ra
+  namespace: airflow
+type: Opaque
+data:
+  username: YWRtaW4=          # "admin" đã được mã hóa base64
+  password: U1VQRVJfUzNDUkVUIFBBU1NXT1JE # Mật khẩu đã được mã hóa base64
+
+---
+executor: "KubernetesExecutor"
+
+images:
+  airflow:
+    repository: gcr.io/alpine-figure-461007-i9/custom-airflow
+    tag: latest
+    pullPolicy: Always
+
+serviceAccount:
+  create: false
+  name: airflow-ksa
+
+scheduler:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+webserver:
+  serviceAccount:
+      create: false
+      name: airflow-ksa
+  startupProbe:
+    failureThreshold: 30        # Tăng số lần thử
+    periodSeconds: 10           # Cách nhau 10 giây
+    initialDelaySeconds: 30     # Đợi 30s rồi mới bắt đầu probe
+    timeoutSeconds: 5           # Timeout mỗi lần thử
+  livenessProbe:
+    initialDelaySeconds: 60
+    failureThreshold: 10
+  
+
+triggerer:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+
+
+extraPipPackages:
+  - dateparser
+  - playwright
+
+
+dags:
+  persistence:
+      enabled: false 
+  gitSync:
+    enabled: true
+    repo: git@github.com:tinhnguyen0110/job-crawl-pipeline.git
+    branch: deploy_gke
+    subPath: airflow/dags  # thư mục chứa DAGs trong repo
+    depth: 1
+    wait: 10
+    sshKeySecret: gitsync_ssh_key
+    rev: HEAD
+
+logs:
+  persistence:
+    enabled: false
+
+config:
+  kubernetes:
+    delete_worker_pods: "False"
+  logging:
+    remote_logging: "True"
+    remote_base_log_folder: "gs://airflow-logs-tinhnv-gke/logs"
+    remote_log_conn_id: "google_cloud_default"
+
+postgresql:
+  enabled: true
+  persistence:
+      accessModes:
+        - ReadWriteOnce
+
+workers:
+  serviceAccount:
+    create: false
+    name: airflow-ksa
+  extraContainers:
+    - name: cloud-sql-proxy
+      image: "gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.0"
+      args:
+      - "--structured-logs"
+      - "--port=5432"
+      - "alpine-figure-461007-i9:asia-southeast1:job-pipeline-db"
+      securityContext:
+        runAsNonRoot: true
+
+
+
