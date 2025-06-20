@@ -1,0 +1,111 @@
+# .github/workflows/build-and-push.yaml
+name: CI - Build and Push Docker Images
+
+# Trigger workflow khi có push lên nhánh develop hoặc main
+on:
+  push:
+    branches:
+      - main
+      - deploy_gke
+
+# Biến môi trường dùng chung cho cả workflow
+env:
+  # Thay thế bằng đường dẫn Artifact Registry của bạn
+  GAR_LOCATION: asia-southeast1 
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  # Tên repo bạn tạo trong Artifact Registry
+  GAR_REPO: "crawl2insight-repo"
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      
+    # === PHẦN QUAN TRỌNG ===
+    # Xuất ra các biến để job `deploy` sau này có thể sử dụng
+    # Chúng ta sử dụng lại chính logic của bạn ở đây.
+    outputs:
+      image_tag: ${{ steps.image_tag.outputs.tag }}
+      backend_built: ${{ steps.build_backend.outputs.metadata != '' }}
+      frontend_built: ${{ steps.build_frontend.outputs.metadata != '' }}
+      airflow_built: ${{ steps.build_airflow.outputs.metadata != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Get Image Tag (Git Commit SHA)
+        id: image_tag
+        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      # --- Bước kiểm tra thay đổi file (Giữ nguyên) ---
+      - name: Check for file changes
+        id: changed_files
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            backend:
+              - src/backend/**
+              - Dockerfile.backend
+            frontend:
+              - src/frontend/**
+              - Dockerfile.frontend
+            airflow:
+              - airflow/**
+              - airflow/Dockerfile
+
+      - name: Authenticate, Setup Docker, and Configure Cache
+        # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
+        if: steps.changed_files.outputs.any_changed == 'true'
+        uses: ./.github/actions/setup-gcp-docker # Giả sử bạn tách các bước lặp lại ra action riêng
+
+      - name: Build and Push Backend Image
+        id: build_backend
+        # Chỉ chạy nếu có thay đổi trong các file của backend
+        if: steps.changed_files.outputs.backend_changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/backend
+          file: ./Dockerfile.backend
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:${{ steps.image_tag.outputs.tag }}
+          # Thêm cache
+          cache-from: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache
+          cache-to: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache,mode=max
+      - name: Build and Push Frontend Image
+        id: build_frontend
+        # Chỉ chạy nếu có thay đổi trong các file của frontend
+        if: steps.changed_files.outputs.frontend_changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/frontend
+          file: ./src/frontend/Dockerfile.frontend
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.image_tag.outputs.tag }}
+          # Thêm cache
+          cache-from: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache
+          cache-to: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache,mode=max
+      - name: Build and Push Airflow Image
+        id: build_airflow
+        # Chỉ chạy nếu có thay đổi trong các file của Airflow
+        if: steps.changed_files.outputs.airflow_changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./airflow
+          file: ./airflow/Dockerfile
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:${{ steps.image_tag.outputs.tag }}
+          # Thêm cache
+          cache-from: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache
+          cache-to: type=registry,ref=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache,mode=max
+      - name: Log what was built
+        run: |
+          echo "Image Tag: ${{ steps.image_tag.outputs.tag }}"
+          echo "Backend built: ${{ steps.build_backend.outputs.metadata != '' }}"
+          echo "Frontend built: ${{ steps.build_frontend.outputs.metadata != '' }}"
+          echo "Airflow built: ${{ steps.build_airflow.outputs.metadata != '' }}"
