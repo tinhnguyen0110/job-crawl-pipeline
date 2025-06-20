@@ -28,7 +28,11 @@ airflow-gitsync
 rendered-manifests.yaml
 frontend/
 temp/
+<<<<<<< HEAD
 # .github/
+=======
+.github/
+>>>>>>> 3d48bbde79dd066ce1710780a33d00a3f0140a78
 
 # Terraform state files
 terraform.tfstate
