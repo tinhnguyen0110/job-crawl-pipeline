@@ -2,9 +2,9 @@ executor: "KubernetesExecutor"
 
 images:
   airflow:
-    # repository: gcr.io/alpine-figure-461007-i9/custom-airflow
-    repository: apache/airflow
-    tag: 2.10.5
+    repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/custom-airflow
+    # repository: apache/airflow
+    tag: latest
     pullPolicy: Always
 
 serviceAccount:

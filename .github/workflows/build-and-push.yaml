@@ -65,3 +65,13 @@ jobs:
           file: ./src/application/frontend/Dockerfile.frontend
           push: true
           tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.image_tag.outputs.tag }}
+
+      - name: Build and Push Airflow Image
+        uses: docker/build-push-action@v5
+        with:
+          # `context` là thư mục chứa Dockerfile và các file cần thiết để build
+          context: ./airflow # << Đường dẫn đến thư mục Airflow cấp cao nhất
+          file: ./airflow/Dockerfile # << Đường dẫn chính xác đến Dockerfile của Airflow
+          push: true
+          # Đặt tên và tag cho image Airflow của bạn trên Artifact Registry
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:${{ steps.image_tag.outputs.tag }}
