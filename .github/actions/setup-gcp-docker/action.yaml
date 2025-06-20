@@ -1,6 +1,6 @@
-name: "Setup GCP Auth + Docker Buildx + Configure GAR"
-description: "Authenticate to GCP, setup Docker Buildx and configure Artifact Registry"
-
+# .github/actions/setup-gcp-auth/action.yaml
+name: "Setup GCP Auth"
+description: "Authenticate to GCP using Workload Identity Federation"
 inputs:
   workload_identity_provider:
     required: true
@@ -8,10 +8,6 @@ inputs:
   service_account:
     required: true
     description: "Service Account email"
-  gar_location:
-    required: true
-    description: "GCP Artifact Registry region (e.g., asia-southeast1)"
-
 runs:
   using: "composite"
   steps:
@@ -20,10 +16,3 @@ runs:
       with:
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
         service_account: ${{ inputs.service_account }}
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Configure Docker for Artifact Registry
-      run: gcloud auth configure-docker ${{ inputs.gar_location }}-docker.pkg.dev
-      shell: bash

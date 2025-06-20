@@ -93,13 +93,18 @@ jobs:
           echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
           echo "Any files changed: ${{ steps.changed_files.outputs.any_changed }}"
 
-      - name: Authenticate, Setup Docker, and Configure Cache
-        # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
+      - name: Setup GCP Auth
         if: steps.changed_files.outputs.any_changed == 'true'
-        uses: ./.github/actions/setup-gcp-docker # Giả sử bạn tách các bước lặp lại ra action riêng
+        uses: ./.github/actions/setup-gcp-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # Gọi action cài đặt Docker
+      - name: Setup Docker for GAR
+        if: steps.changed_files.outputs.any_changed == 'true'
+        uses: ./.github/actions/setup-docker
+        with:
           gar_location: ${{ env.GAR_LOCATION }}
 
       - name: Build and Push Backend Image
@@ -151,19 +156,19 @@ jobs:
   deploy:
     name: Deploy to GKE
     runs-on: ubuntu-latest
-    needs: build-and-push # Chạy sau khi job build-and-push hoàn thành
-    
-    # Chỉ deploy nếu có ít nhất một image đã được build
-    if: needs.build-and-push.outputs.backend_built == 'true' || needs.build-and-push.outputs.frontend_built == 'true' || needs.build-and-push.outputs.airflow_built == 'true'
+    needs: build-and-push
+    if: needs.build-and-push.outputs.any_changed == 'true'
 
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'deploy_gke' }}
+    # Sửa lại logic này để map đúng tên môi trường
+    environment: ${{ (github.ref == 'refs/heads/main' && 'production') || (github.ref == 'refs/heads/deploy_gke' && 'development') }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: 'google-github-actions/auth@v2'
+      # <<< TẬN DỤNG ACTION ĐÃ TẠO >>>
+      - name: Setup GCP Auth
+        uses: ./.github/actions/setup-gcp-auth # << Rất gọn gàng!
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -171,8 +176,8 @@ jobs:
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
-          cluster_name: "simple-cluster" # << Thay bằng tên cluster của bạn
-          location: "asia-southeast1-a"   # << Thay bằng location cluster của bạn
+          cluster_name: "simple-cluster"
+          location: "asia-southeast1-a" # << Đã sửa thành regional cho khớp với Terraform
 
       - name: Install Helmfile
         run: |
