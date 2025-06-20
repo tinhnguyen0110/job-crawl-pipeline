@@ -45,7 +45,7 @@ jobs:
 
       # --- Bước kiểm tra thay đổi file (Giữ nguyên) ---
       - name: Check for file changes using manual git diff
-        id: file_checker # Đặt một id mới cho step này
+        id: changed_files
         run: |
           # Lấy danh sách tất cả các file đã thay đổi giữa commit trước và sau khi push
           # Chúng ta vẫn cần `fetch-depth: 0` ở bước checkout để lệnh này hoạt động
