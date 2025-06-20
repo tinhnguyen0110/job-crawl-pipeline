@@ -17,7 +17,7 @@ logs/
 # Credentials / config
 config/config.yaml
 .env
-app/
+# app/
 data/
 # Airflow
 airflow.db
