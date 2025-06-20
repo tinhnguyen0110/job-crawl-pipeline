@@ -48,6 +48,7 @@ jobs:
         id: changed_files
         uses: tj-actions/changed-files@v44
         with:
+          since_last_remote_commit: true
           files_yaml: |
             backend:
               - src/backend/**
