@@ -61,7 +61,7 @@ jobs:
               - airflow/**
               - airflow/Dockerfile
               - .trigger-airflow
-            - name: Debug Changed Outputs
+      - name: Debug Changed Outputs
         run: |
           echo "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
           echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
