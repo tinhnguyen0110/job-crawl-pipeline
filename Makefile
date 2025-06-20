@@ -10,6 +10,6 @@ date > .trigger-airflow
 
 git add .trigger-backend .trigger-frontend .trigger-airflow
 git commit -m "ci: trigger full CI/CD via dummy trigger files"
-git push
+git push origin deploy_gke
 
 echo "✅ CI/CD triggered via trigger files!"

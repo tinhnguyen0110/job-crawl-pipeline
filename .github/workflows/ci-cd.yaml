@@ -48,16 +48,25 @@ jobs:
         id: changed_files
         uses: tj-actions/changed-files@v44
         with:
-          files_yaml: |
-              backend:
-                  - src/backend/**
-                  - Dockerfile.backend
-              frontend:
-                - src/frontend/**
-                - Dockerfile.frontend
-              airflow:
-                - airflow/**
-                - airflow/Dockerfile
+         files_yaml: |
+            backend:
+              - src/backend/**
+              - Dockerfile.backend
+              - .trigger-backend
+            frontend:
+              - src/frontend/**
+              - Dockerfile.frontend
+              - .trigger-frontend
+            airflow:
+              - airflow/**
+              - airflow/Dockerfile
+              - .trigger-airflow
+            - name: Debug Changed Outputs
+        run: |
+          echo "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
+          echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
+          echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
+          echo "Any changed: ${{ steps.changed_files.outputs.any_changed }}"
 
       - name: Authenticate, Setup Docker, and Configure Cache
         # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
