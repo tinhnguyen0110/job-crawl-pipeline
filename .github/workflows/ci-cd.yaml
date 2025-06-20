@@ -28,10 +28,10 @@ jobs:
     # Xuất ra các biến để job `deploy` sau này có thể sử dụng
     # Chúng ta sử dụng lại chính logic của bạn ở đây.
     outputs:
-      image_tag: ${{ steps.image_tag.outputs.tag }}
-      backend_built: ${{ steps.build_backend.outputs.metadata != '' }}
-      frontend_built: ${{ steps.build_frontend.outputs.metadata != '' }}
-      airflow_built: ${{ steps.build_airflow.outputs.metadata != '' }}
+      backend_built: ${{ steps.changed_files.outputs.backend_changed == 'true' }}
+      frontend_built: ${{ steps.changed_files.outputs.frontend_changed == 'true' }}
+      airflow_built: ${{ steps.changed_files.outputs.airflow_changed == 'true' }}
+      any_changed: ${{ steps.changed_files.outputs.any_changed == 'true' }}
 
     steps:
       - name: Checkout repository
@@ -86,23 +86,23 @@ jobs:
           # base_sha: ${{ github.event.before }}
           # sha: ${{ github.sha }}
       - name: List all changed files
-        run: echo "${{ steps.file_checker.outputs.all_changed_files }}"
+        run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
       - name: Debug Changed Outputs
         run: |
-          echo "Backend changed: ${{ steps.file_checker.outputs.backend_changed }}"
-          echo "Frontend changed: ${{ steps.file_checker.outputs.frontend_changed }}"
-          echo "Airflow changed: ${{ steps.file_checker.outputs.airflow_changed }}"
-          echo "Any changed: ${{ steps.file_checker.outputs.any_changed }}"
+          echo  "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
+          echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
+          echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
+          echo "Any files changed: ${{ steps.changed_files.outputs.any_changed }}"
 
       - name: Authenticate, Setup Docker, and Configure Cache
         # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
-        if: steps.file_checker.outputs.any_changed == 'true'
+        if: steps.changed_files.outputs.any_changed == 'true'
         uses: ./.github/actions/setup-gcp-docker # Giả sử bạn tách các bước lặp lại ra action riêng
 
       - name: Build and Push Backend Image
         id: build_backend
         # Chỉ chạy nếu có thay đổi trong các file của backend
-        if: steps.file_checker.outputs.backend_changed == 'true'
+        if: steps.changed_files.outputs.backend_changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./src/backend
@@ -115,7 +115,7 @@ jobs:
       - name: Build and Push Frontend Image
         id: build_frontend
         # Chỉ chạy nếu có thay đổi trong các file của frontend
-        if: steps.file_checker.outputs.frontend_changed == 'true'
+        if: steps.changed_files.outputs.frontend_changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./src/frontend
@@ -128,7 +128,7 @@ jobs:
       - name: Build and Push Airflow Image
         id: build_airflow
         # Chỉ chạy nếu có thay đổi trong các file của Airflow
-        if: steps.file_checker.outputs.airflow_changed == 'true'
+        if: steps.changed_files.outputs.airflow_changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./airflow
@@ -141,9 +141,9 @@ jobs:
       - name: Log what was built
         run: |
           echo "Image Tag: ${{ steps.image_tag.outputs.tag }}"
-          echo "Backend built: ${{ steps.file_checker.outputs.backend_changed }}"
-          echo "Frontend built: ${{ steps.file_checker.outputs.frontend_changed }}"
-          echo "Airflow built: ${{ steps.file_checker.outputs.airflow_changed }}"
+          echo "Backend built: ${{ steps.changed_files.outputs.backend_changed }}"
+          echo "Frontend built: ${{ steps.changed_files.outputs.frontend_changed }}"
+          echo "Airflow built: ${{ steps.changed_files.outputs.airflow_changed }}"
 
   deploy:
     name: Deploy to GKE
