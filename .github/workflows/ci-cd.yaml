@@ -99,7 +99,7 @@ jobs:
     #     uses: ./.github/actions/setup-gcp-auth
     #     with:
     #       workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-    #       service_account: ${{ secrets.GAR_REGION }}
+    #       service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
     #   # Gọi action cài đặt Docker
     #   - name: Setup Docker for GAR
@@ -174,7 +174,7 @@ jobs:
         uses: ./.github/actions/setup-gcp-auth # << Rất gọn gàng!
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_ZONE }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v2
