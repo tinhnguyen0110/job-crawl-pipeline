@@ -180,7 +180,11 @@ jobs:
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: "simple-cluster"
-          location: "asia-southeast1-a" # << Đã sửa thành regional cho khớp với Terraform
+          # Sử dụng biến môi trường đã tạo để đảm bảo nhất quán
+          location: ${{ env.GKE_ZONE }} 
+          
+          # <<< THÊM DÒNG NÀY VÀO >>>
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Install Helmfile
         run: |
