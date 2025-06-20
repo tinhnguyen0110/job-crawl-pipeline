@@ -48,7 +48,7 @@ jobs:
         id: changed_files
         uses: tj-actions/changed-files@v44
         with:
-         files_yaml: |
+          files_yaml: |
             backend:
               - src/backend/**
               - Dockerfile.backend
@@ -61,6 +61,9 @@ jobs:
               - airflow/**
               - airflow/Dockerfile
               - .trigger-airflow
+          base_sha: ${{ github.event.before }}
+          sha: ${{ github.sha }}
+
       - name: Debug Changed Outputs
         run: |
           echo "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
