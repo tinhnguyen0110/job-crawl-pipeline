@@ -1,3 +1,4 @@
+# deployment/application/values.yaml
 frontend-chart:
   image:
     repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/frontend # << ĐƯỜNG DẪN MỚI
