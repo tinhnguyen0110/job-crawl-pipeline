@@ -17,4 +17,4 @@ USER airflow
 
 #test
 ENV PATH=/home/airflow/.local/bin:$PATH \
-    PYTHONPATH=/home/airflow/.local/lib/python3.12/site-packages:$PYTHONPATH
+    PYTHONPATH=/home/airflow/.local/lib/python3.12/site-packages:$PYTHONPATH# ci: fake change Fri, Jun 20, 2025  7:06:17 PM
