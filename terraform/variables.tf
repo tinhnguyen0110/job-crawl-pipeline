@@ -1,6 +1,16 @@
-gitsync_ssh_private_key = file("airflow-gitsync")
-google_api_key = "AIzaSyAqFlsPpDMXnwc8iJ-WmpAsaozY6AVR-sA"
-litellm_master_key = "sk-1234"
+variable "litellm_master_key" {
+  description = "key for LiteLLM master"
+  type        = string
+  sensitive   = true 
+  default     = "sk-1234"
+}
+
+variable "google_api_key" {
+  description = "key for Google API"
+  type        = string
+  sensitive   = true # Rất quan trọng! Terraform sẽ ẩn giá trị này trong output.
+  default     = "AIzaSyAqFlsPpDMXnwc8iJ-WmpAsaozY6AVR-sA"
+}
 
 variable "project_id" {
   description = "The GCP project ID to deploy to."
@@ -11,7 +21,7 @@ variable "project_id" {
 variable "region" {
   description = "The GCP region to deploy GKE cluster."
   type        = string
-  default     = "asia-southeast1-a"
+  default     = "asia-southeast1"
 }
 
 variable "zone" {
@@ -42,11 +52,5 @@ variable "gke_cluster_version" {
   description = "The GKE version for the master and nodes. If null, the latest available version will be used."
   type        = string
   default     = null # Let GCP pick the latest stable version
-}
-
-variable "gitsync_ssh_private_key" {
-  description = "The private SSH key content for Git-Sync to clone repos."
-  type        = string
-  sensitive   = true # Rất quan trọng! Terraform sẽ ẩn giá trị này trong output.
 }
 

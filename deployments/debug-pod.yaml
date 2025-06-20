@@ -1,0 +1,15 @@
+# debug-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+  namespace: airflow # Deploy pod này vào cùng namespace với Airflow
+spec:
+  # Quan trọng: Chỉ định pod này sử dụng KSA của Airflow
+  serviceAccountName: airflow-ksa 
+  containers:
+  - name: gcloud-sdk
+    # Dùng image có sẵn gcloud SDK
+    image: google/cloud-sdk:slim
+    # Giữ pod chạy mãi để chúng ta có thể exec vào
+    command: ["sleep", "infinity"]

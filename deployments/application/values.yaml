@@ -1,4 +1,5 @@
 frontend-chart:
+  servicePort: 80
   backend:
     serviceName: "backend-service"
     servicePort: 80

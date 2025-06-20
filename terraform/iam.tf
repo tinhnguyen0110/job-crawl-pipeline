@@ -1,10 +1,59 @@
 
 #========= cấp quyền cho git ===========
+
+resource "google_service_account" "github_runner_sa" {
+  project      = var.project_id
+  account_id   = "github-runner-sa"
+  display_name = "Service Account for GitHub Actions Runner"
+}
+
 # Quyền đẩy image lên Artifact Registry
 resource "google_project_iam_member" "runner_artifact_writer" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
   member  = "serviceAccount:${google_service_account.github_runner_sa.email}"
+}
+
+# 1. Tạo một Workload Identity Pool
+resource "google_iam_workload_identity_pool" "github_pool" {
+  project                   = var.project_id
+  workload_identity_pool_id = "github-actions-pool"
+  display_name              = "GitHub Actions Pool"
+}
+
+# 2. Tạo một Provider bên trong Pool đó cho GitHub
+resource "google_iam_workload_identity_pool_provider" "github_provider" {
+  project                            = var.project_id
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github_pool.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github-provider"
+  display_name                       = "GitHub Actions Provider"
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+
+  attribute_mapping = {
+    # Ánh xạ các thuộc tính từ GitHub token sang Google token
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.repository" = "assertion.repository"
+  }
+  # Cho phép bất kỳ repo nào trong tổ chức/user của bạn
+  # Để an toàn hơn, bạn có thể chỉ định repo cụ thể: "repo:your-github-org/your-repo-name"
+  attribute_condition = "assertion.repository.startsWith('repo:your-github-org/')"
+}
+
+# 3. Cấp quyền cho GitHub Actions "giả danh" SA của runner
+# Đây là bước quan trọng nhất
+resource "google_service_account_iam_member" "github_runner_impersonation" {
+  # GSA của runner mà chúng ta đã tạo ở lần trước
+  service_account_id = google_service_account.github_runner_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  # Định danh của GitHub Actions
+  # Cú pháp: "principalSet://iam.googleapis.com/{POOL_ID}/attribute.repository/{ORG_NAME}/{REPO_NAME}"
+ member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/your-github-org/your-repo-name"
+# member = "principalSet://iam.googleapis.com/projects/${var.project_number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_pool.workload_identity_pool_id}/attribute.repository/your-github-org/your-repo-name"
+
 }
 
 # Quyền deploy lên GKE
@@ -39,6 +88,12 @@ resource "google_service_account_iam_member" "eos_workload_binding" {
   service_account_id = google_service_account.eos_sa.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[external-secrets/eos-ksa]"
+}
+
+resource "google_project_iam_member" "eos_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.eos_sa.email}"
 }
 
 #========= cấp quyền cho GKE Node ============
@@ -148,7 +203,7 @@ resource "google_service_account" "litellm_sa" {
 # Quyền đọc secret cho LiteLLM
 resource "google_secret_manager_secret_iam_member" "litellm_api_key_accessor" {
   project   = var.project_id
-  secret_id = google_secret_manager_secret.litellm_openai_api_key.secret_id
+  secret_id = google_secret_manager_secret.litellm_openai_api_keys.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.litellm_sa.email}"
 }

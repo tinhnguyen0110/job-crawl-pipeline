@@ -2,11 +2,11 @@
 environments:
   development:
     values:
-    - ./config/environments/development.yaml
+    - ./environments/development.yaml
 
 repositories:
   - name: apache-airflow
-    url: https://airflow-helm.github.io/charts
+    url: https://airflow.apache.org
 ---
 # Danh sách các Helm Release cần triển khai
 releases:
@@ -14,7 +14,7 @@ releases:
   - name: airflow-system
     namespace: airflow
     chart: apache-airflow/airflow
-    version: 1.16.0 # Luôn dùng version cụ thể
+    version: 1.16.0
     values:
       - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
     # Release 2: Litellm Service
