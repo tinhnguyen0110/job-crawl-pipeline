@@ -10,8 +10,10 @@ runs:
         workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
 
-    - name: Set up Docker Buildx
+    - name: Set up Docker Buildx with correct driver
       uses: docker/setup-buildx-action@v3
+      with:
+        driver: docker-container
 
     - name: Configure Docker for Artifact Registry
       run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
