@@ -67,7 +67,7 @@ resource "google_service_account_iam_member" "github_token_creator" {
 # Quyền deploy lên GKE
 resource "google_project_iam_member" "runner_gke_developer" {
   project = var.project_id
-  role    = "roles/container.developer"
+  role    = "roles/container.admin"
   member  = "serviceAccount:${google_service_account.github_runner_sa.email}"
 }
 
