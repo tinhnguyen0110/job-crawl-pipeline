@@ -141,9 +141,9 @@ jobs:
       - name: Log what was built
         run: |
           echo "Image Tag: ${{ steps.image_tag.outputs.tag }}"
-          echo "Backend built: ${{ steps.build_backend.outputs.metadata != '' }}"
-          echo "Frontend built: ${{ steps.build_frontend.outputs.metadata != '' }}"
-          echo "Airflow built: ${{ steps.build_airflow.outputs.metadata != '' }}"
+          echo "Backend built: ${{ steps.file_checker.outputs.backend_changed }}"
+          echo "Frontend built: ${{ steps.file_checker.outputs.frontend_changed }}"
+          echo "Airflow built: ${{ steps.file_checker.outputs.airflow_changed }}"
 
   deploy:
     name: Deploy to GKE
