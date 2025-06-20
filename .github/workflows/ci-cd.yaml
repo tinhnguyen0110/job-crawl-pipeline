@@ -197,7 +197,7 @@ jobs:
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "env_name=production" >> $GITHUB_OUTPUT
           else
-            echo "env_name=deploy_gke" >> $GITHUB_OUTPUT
+            echo "env_name=development" >> $GITHUB_OUTPUT
           fi
 
       - name: Run Helmfile Deploy
