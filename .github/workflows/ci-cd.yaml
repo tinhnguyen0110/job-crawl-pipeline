@@ -44,28 +44,45 @@ jobs:
         run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       # --- Bước kiểm tra thay đổi file (Giữ nguyên) ---
-      - name: Check for file changes
-        id: changed_files
-        uses: tj-actions/changed-files@v44
-        with:
-          # Sử dụng phương pháp so sánh đáng tin cậy hơn
-          since_last_remote_commit: true
+      - name: Check for file changes using manual git diff
+        id: file_checker # Đặt một id mới cho step này
+        run: |
+          # Lấy danh sách tất cả các file đã thay đổi giữa commit trước và sau khi push
+          # Chúng ta vẫn cần `fetch-depth: 0` ở bước checkout để lệnh này hoạt động
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           
-          # Cú pháp đúng cho chuỗi nhiều dòng trong YAML
-          files_yaml: | # <<< BẮT BUỘC CÓ DẤU `|`
-            # Tất cả các dòng dưới đây phải thụt vào so với `files_yaml`
-            backend:
-              - src/backend/**
-              - Dockerfile.backend
-              - ./.trigger-backend
-            frontend:
-              - src/frontend/**
-              - Dockerfile.frontend
-              - ./.trigger-frontend
-            airflow:
-              - airflow/**
-              - airflow/Dockerfile
-              - ./.trigger-airflow
+          echo "--- All changed files ---"
+          echo "$CHANGED_FILES"
+          echo "-------------------------"
+
+          # --- Kiểm tra cho Backend ---
+          # grep -qE: tìm kiếm theo regex (-E) một cách thầm lặng (-q)
+          # Nếu tìm thấy dù chỉ 1 dòng khớp, nó trả về exit code 0 (thành công)
+          if echo "$CHANGED_FILES" | grep -qE "(^src/backend/|Dockerfile\.backend|\.trigger-backend)"; then
+            echo "Backend files changed: YES"
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Backend files changed: NO"
+            echo "backend_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # --- Kiểm tra cho Frontend ---
+          if echo "$CHANGED_FILES" | grep -qE "(^src/frontend/|Dockerfile\.frontend|\.trigger-frontend)"; then
+            echo "Frontend files changed: YES"
+            echo "frontend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Frontend files changed: NO"
+            echo "frontend_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # --- Kiểm tra cho Airflow ---
+          if echo "$CHANGED_FILES" | grep -qE "(^airflow/|airflow/Dockerfile|\.trigger-airflow)"; then
+            echo "Airflow files changed: YES"
+            echo "airflow_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Airflow files changed: NO"
+            echo "airflow_changed=false" >> $GITHUB_OUTPUT
+          fi
           # base_sha: ${{ github.event.before }}
           # sha: ${{ github.sha }}
       - name: List all changed files
