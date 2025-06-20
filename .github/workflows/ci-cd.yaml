@@ -218,11 +218,10 @@ jobs:
 
           # Kiểm tra và thêm tham số cho từng image đã được build
           # Cách làm đúng chuẩn: thêm flag và giá trị của nó như 2 phần tử riêng biệt
-          echo "DEBUG: TAG = $TAG"
+          echo "DEBUG: TAG = $TAG, Backend built: ${{ needs.build-and-push.outputs.backend_built }}, Frontend built: ${{ needs.build-and-push.outputs.frontend_built }}, Airflow built: ${{ needs.build-and-push.outputs.airflow_built }}"
           if [ "${{ needs.build-and-push.outputs.backend_built }}" = "true" ]; then
             SET_ARGS+=(--set "backend-chart.image.tag=${TAG}")
           fi
-          echo "DEBUG: TAG = $TAG"
           if [ "${{ needs.build-and-push.outputs.frontend_built }}" = "true" ]; then
             SET_ARGS+=(--set "frontend-chart.image.tag=${TAG}")
           fi
