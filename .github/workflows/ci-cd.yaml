@@ -109,3 +109,70 @@ jobs:
           echo "Backend built: ${{ steps.build_backend.outputs.metadata != '' }}"
           echo "Frontend built: ${{ steps.build_frontend.outputs.metadata != '' }}"
           echo "Airflow built: ${{ steps.build_airflow.outputs.metadata != '' }}"
+
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    needs: build-and-push # Chạy sau khi job build-and-push hoàn thành
+    
+    # Chỉ deploy nếu có ít nhất một image đã được build
+    if: needs.build-and-push.outputs.backend_built == 'true' || needs.build-and-push.outputs.frontend_built == 'true' || needs.build-and-push.outputs.airflow_built == 'true'
+
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'deploy_gke' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: "simple-cluster" # << Thay bằng tên cluster của bạn
+          location: "asia-southeast1-a"   # << Thay bằng location cluster của bạn
+
+      - name: Install Helmfile
+        run: |
+          curl -L https://github.com/helmfile/helmfile/releases/download/v0.165.0/helmfile_0.165.0_linux_amd64.tar.gz | tar xz
+          sudo mv helmfile /usr/local/bin/helmfile
+
+      - name: Determine Environment Name
+        id: environment
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=deploy_gke" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Helmfile Deploy
+        run: |
+          # Lấy tag image từ output của job trước
+          TAG=${{ needs.build-and-push.outputs.image_tag }}
+
+          # Khởi tạo một mảng Bash rỗng để chứa các tham số --set
+          SET_ARGS=()
+
+          # Kiểm tra và thêm tham số cho từng image đã được build
+          # Cách làm đúng chuẩn: thêm flag và giá trị của nó như 2 phần tử riêng biệt
+          if [ "${{ needs.build-and-push.outputs.backend_built }}" = "true" ]; then
+            SET_ARGS+=(--set "backend-chart.image.tag=$TAG")
+          fi
+          if [ "${{ needs.build-and-push.outputs.frontend_built }}" = "true" ]; then
+            SET_ARGS+=(--set "frontend-chart.image.tag=$TAG")
+          fi
+          if [ "${{ needs.build-and-push.outputs.airflow_built }}" = "true" ]; then
+            SET_ARGS+=(--set "images.airflow.tag=$TAG")
+          fi
+          
+          echo "Deploying to ${{ steps.environment.outputs.env_name }}..."
+          echo "Applying extra args: ${SET_ARGS[@]}"
+          
+          # Chạy lệnh cuối cùng, truyền mảng tham số vào
+          # Dấu ngoặc kép và ký hiệu "@" rất quan trọng để xử lý đúng các phần tử
+          helmfile --environment ${{ steps.environment.outputs.env_name }} apply --suppress-secrets "${SET_ARGS[@]}"
