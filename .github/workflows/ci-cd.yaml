@@ -232,4 +232,6 @@ jobs:
           
           # Chạy lệnh cuối cùng, truyền mảng tham số vào
           # Dấu ngoặc kép và ký hiệu "@" rất quan trọng để xử lý đúng các phần tử
+          echo "Helmfile will set the following image tags:"
+          echo "${SET_ARGS[@]}"
           helmfile --environment ${{ steps.environment.outputs.env_name }} apply --suppress-secrets "${SET_ARGS[@]}"
