@@ -97,6 +97,10 @@ jobs:
         # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
         if: steps.changed_files.outputs.any_changed == 'true'
         uses: ./.github/actions/setup-gcp-docker # Giả sử bạn tách các bước lặp lại ra action riêng
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          gar_location: ${{ env.GAR_LOCATION }}
 
       - name: Build and Push Backend Image
         id: build_backend
