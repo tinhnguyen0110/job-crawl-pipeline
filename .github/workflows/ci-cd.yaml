@@ -54,6 +54,8 @@ jobs:
           echo "--- All changed files ---"
           echo "$CHANGED_FILES"
           echo "-------------------------"
+          # Ghi tất cả file thay đổi
+          echo "all_changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
           # --- Kiểm tra cho Backend ---
           # grep -qE: tìm kiếm theo regex (-E) một cách thầm lặng (-q)
@@ -82,9 +84,13 @@ jobs:
           else
             echo "Airflow files changed: NO"
             echo "airflow_changed=false" >> $GITHUB_OUTPUT
+
+            # Nếu có thay đổi thì
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "any_changed=false" >> $GITHUB_OUTPUT
           fi
-          # base_sha: ${{ github.event.before }}
-          # sha: ${{ github.sha }}
       - name: List all changed files
         run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
       - name: Debug Changed Outputs
