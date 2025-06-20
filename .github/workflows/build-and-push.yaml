@@ -53,8 +53,8 @@ jobs:
       - name: Build and Push Backend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./src/application/backend # Đường dẫn đến thư mục chứa Dockerfile của backend
-          file: ./Dockerfile
+          context: ./src/application/backend 
+          file: ./src/application/backend/Dockerfile.backend
           push: true
           tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:${{ steps.image_tag.outputs.tag }}
 
@@ -62,6 +62,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./src/application/frontend
-          file: ./Dockerfile
+          file: ./src/application/frontend/Dockerfile.frontend
           push: true
           tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.image_tag.outputs.tag }}
