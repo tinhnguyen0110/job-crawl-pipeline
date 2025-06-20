@@ -190,6 +190,8 @@ jobs:
         run: |
           curl -L https://github.com/helmfile/helmfile/releases/download/v0.165.0/helmfile_0.165.0_linux_amd64.tar.gz | tar xz
           sudo mv helmfile /usr/local/bin/helmfile
+      - name: Install helm-diff plugin
+        run: helm plugin install https://github.com/databus23/helm-diff
 
       - name: Determine Environment Name
         id: environment
