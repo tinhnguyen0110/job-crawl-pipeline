@@ -52,17 +52,17 @@ jobs:
             backend:
               - src/backend/**
               - Dockerfile.backend
-              - .trigger-backend
+              - ./.trigger-backend
             frontend:
               - src/frontend/**
               - Dockerfile.frontend
-              - .trigger-frontend
+              - ./.trigger-frontend
             airflow:
               - airflow/**
               - airflow/Dockerfile
-              - .trigger-airflow
-          base_sha: ${{ github.event.before }}
-          sha: ${{ github.sha }}
+              - ./.trigger-airflow
+          # base_sha: ${{ github.event.before }}
+          # sha: ${{ github.sha }}
       - name: List all changed files
         run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
       - name: Debug Changed Outputs
