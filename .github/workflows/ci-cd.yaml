@@ -49,15 +49,15 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           files_yaml: |
-            backend:
-              - src/backend/**
-              - Dockerfile.backend
-            frontend:
-              - src/frontend/**
-              - Dockerfile.frontend
-            airflow:
-              - airflow/**
-              - airflow/Dockerfile
+              backend:
+                  - src/backend/**
+                  - Dockerfile.backend
+              frontend:
+                - src/frontend/**
+                - Dockerfile.frontend
+              airflow:
+                - airflow/**
+                - airflow/Dockerfile
 
       - name: Authenticate, Setup Docker, and Configure Cache
         # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
