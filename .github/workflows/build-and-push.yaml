@@ -30,6 +30,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Dump GitHub Context
+        run: echo "${{ toJSON(github) }}" 
+
       - name: Get Image Tag (Git Commit SHA)
         id: image_tag
         run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT

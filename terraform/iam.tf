@@ -39,7 +39,8 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
   }
   # Cho phép bất kỳ repo nào trong tổ chức/user của bạn
   # Để an toàn hơn, bạn có thể chỉ định repo cụ thể: "repo:your-github-org/your-repo-name"
-  attribute_condition = "assertion.repository.startsWith('repo:your-github-org/')"
+  #attribute_condition = "assertion.repository.startsWith('repo:your-github-org/')"
+  attribute_condition = "assertion.repository == 'tinhnguyen0110/job-crawl-pipeline'"
 }
 
 # 3. Cấp quyền cho GitHub Actions "giả danh" SA của runner
