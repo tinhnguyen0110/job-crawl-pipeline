@@ -1,0 +1,59 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.job-tags span {
+  /* Các thuộc tính cũ của bạn như background-color, padding... */
+  background-color: #f0f0f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-right: 0.5rem;
+
+  /* === THÊM CÁC DÒNG NÀY VÀO === */
+  display: inline-block; /* Cần có để max-width hoạt động */
+  max-width: 150px;      /* Giới hạn chiều rộng tối đa của tag */
+  white-space: nowrap;     /* Ngăn không cho text xuống dòng */
+  overflow: hidden;        /* Ẩn phần text bị thừa */
+  text-overflow: ellipsis; /* Hiển thị dấu "..." */
+  vertical-align: middle;  /* Giúp căn chỉnh các tag thẳng hàng hơn */
+}
