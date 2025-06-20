@@ -54,38 +54,31 @@ jobs:
           echo "--- All changed files ---"
           echo "$CHANGED_FILES"
           echo "-------------------------"
-          # Ghi tất cả file thay đổi
-          echo "all_changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
 
-          # --- Kiểm tra cho Backend ---
-          # grep -qE: tìm kiếm theo regex (-E) một cách thầm lặng (-q)
-          # Nếu tìm thấy dù chỉ 1 dòng khớp, nó trả về exit code 0 (thành công)
+          # ✅ Ghi dạng block nếu giá trị có xuống dòng
+          echo "all_changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Các flag kiểm tra:
           if echo "$CHANGED_FILES" | grep -qE "(^src/backend/|Dockerfile\.backend|\.trigger-backend)"; then
-            echo "Backend files changed: YES"
             echo "backend_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Backend files changed: NO"
             echo "backend_changed=false" >> $GITHUB_OUTPUT
           fi
 
-          # --- Kiểm tra cho Frontend ---
           if echo "$CHANGED_FILES" | grep -qE "(^src/frontend/|Dockerfile\.frontend|\.trigger-frontend)"; then
-            echo "Frontend files changed: YES"
             echo "frontend_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Frontend files changed: NO"
             echo "frontend_changed=false" >> $GITHUB_OUTPUT
           fi
 
-          # --- Kiểm tra cho Airflow ---
           if echo "$CHANGED_FILES" | grep -qE "(^airflow/|airflow/Dockerfile|\.trigger-airflow)"; then
-            echo "Airflow files changed: YES"
             echo "airflow_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Airflow files changed: NO"
             echo "airflow_changed=false" >> $GITHUB_OUTPUT
+          fi
 
-            # Nếu có thay đổi thì
           if [ -n "$CHANGED_FILES" ]; then
             echo "any_changed=true" >> $GITHUB_OUTPUT
           else
