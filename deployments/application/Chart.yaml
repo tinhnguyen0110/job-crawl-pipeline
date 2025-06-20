@@ -12,11 +12,6 @@ dependencies:
   version: "0.1.0" 
   repository: "file://./charts/backend-chart" 
 
-- name: airflow
-  version: "1.16.0" # <<< Luôn chọn một version cụ thể, không dùng 'latest'
-  repository: "https://airflow.apache.org" # <<< Trỏ đến repo đã add
-  alias: airflow # (Tùy chọn) Đặt tên alias để dùng trong values.yaml
-
 - name: frontend-chart
   version: "0.1.0" 
   repository: "file://./charts/frontend-chart"

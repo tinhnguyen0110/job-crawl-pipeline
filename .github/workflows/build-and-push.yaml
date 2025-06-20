@@ -1,0 +1,64 @@
+# .github/workflows/build-and-push.yaml
+name: CI - Build and Push Docker Images
+
+# Trigger workflow khi có push lên nhánh develop hoặc main
+on:
+  push:
+    branches:
+      - main
+      - deploy_gke
+
+# Biến môi trường dùng chung cho cả workflow
+env:
+  # Thay thế bằng đường dẫn Artifact Registry của bạn
+  GAR_LOCATION: asia-southeast1 
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  # Tên repo bạn tạo trong Artifact Registry
+  GAR_REPO: "crawl2insight-repo"
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+
+    # Cấp quyền cho workflow để có thể lấy OIDC token
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Image Tag (Git Commit SHA)
+        id: image_tag
+        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/backend # Đường dẫn đến thư mục chứa Dockerfile của backend
+          file: ./Dockerfile.backend
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:${{ steps.image_tag.outputs.tag }}
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/frontend
+          file: ./Dockerfile.frontend
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.image_tag.outputs.tag }}

@@ -27,7 +27,12 @@ default-values.yaml
 airflow-gitsync
 rendered-manifests.yaml
 frontend/
-.terraform/
-terraform.*
 temp/
-.github/
+# .github/
+
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+.terraform/

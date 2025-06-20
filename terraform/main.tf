@@ -2,8 +2,7 @@
 resource "google_container_cluster" "primary" {
   project  = var.project_id
   name     = var.gke_cluster_name
-  location = var.region # <-- Chuyển sang Regional
-
+  location = var.zone 
   remove_default_node_pool = true
   initial_node_count       = 1
 
@@ -42,3 +41,4 @@ resource "google_container_node_pool" "primary_nodes" {
     # spot = true # Cân nhắc dùng Spot VMs để tiết kiệm chi phí
   }
 }
+

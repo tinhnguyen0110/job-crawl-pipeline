@@ -1,4 +1,3 @@
-# 1. Tạo Artifact Registry để chứa Docker images (thay thế cho GCR)
 resource "google_artifact_registry_repository" "main_repo" {
   provider      = google-beta
   project       = var.project_id
@@ -13,7 +12,7 @@ resource "google_secret_manager_secret" "airflow_fernet_key" {
   project   = var.project_id
   secret_id = "airflow-fernet-key"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
@@ -21,7 +20,7 @@ resource "google_secret_manager_secret" "litellm_master_key" {
   project   = var.project_id
   secret_id = "litellm-master-key"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
@@ -29,7 +28,7 @@ resource "google_secret_manager_secret" "litellm_openai_api_keys" {
   project   = var.project_id
   secret_id = "litellm-openai-api-keys"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
@@ -37,7 +36,7 @@ resource "google_secret_manager_secret" "litellm_ui_credentials" {
   project   = var.project_id
   secret_id = "litellm-ui-credentials"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
@@ -45,7 +44,7 @@ resource "google_secret_manager_secret" "gitsync_ssh_key" {
   project   = var.project_id
   secret_id = "gitsync-ssh-key"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
@@ -72,11 +71,11 @@ resource "google_secret_manager_secret_version" "litellm_ui_credentials_v1" {
   secret      = google_secret_manager_secret.litellm_ui_credentials.id
   secret_data = jsonencode({
     username = "admin"
-    password = sensitive("admin123")
+    password = "admin123"
   })
 }
 
 resource "google_secret_manager_secret_version" "gitsync_ssh_key_v1" {
   secret      = google_secret_manager_secret.gitsync_ssh_key.id
-  secret_data = var.gitsync_ssh_private_key # Sử dụng biến đã khai báo trong variables.tf
+  secret_data = local.gitsync_ssh_private_key # Sử dụng biến đã khai báo trong locals.tf
 }

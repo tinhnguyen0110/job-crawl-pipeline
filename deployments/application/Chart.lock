@@ -2,11 +2,8 @@ dependencies:
 - name: backend-chart
   repository: file://./charts/backend-chart
   version: 0.1.0
-- name: airflow
-  repository: https://airflow.apache.org
-  version: 1.16.0
 - name: frontend-chart
   repository: file://./charts/frontend-chart
   version: 0.1.0
-digest: sha256:0fdb6ba1c4817b0d34c227c05f08b8625e0f0e80e94d06bc38dd4e2b08e16894
-generated: "2025-06-18T23:40:36.4225523+07:00"
+digest: sha256:a524ab77a2223fd27ea8e57a4fb86a44d6d8d734614a9febf1cc5a0ee15d19d3
+generated: "2025-06-20T08:25:18.6408827+07:00"

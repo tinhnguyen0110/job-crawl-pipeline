@@ -2,15 +2,15 @@
 releases:
   # === Ghi đè cho release `app-services` ===
   - name: app-services
-    values:
-      # Sử dụng key `application-umbrella` vì đó là tên chart trong `charts/`
-      # nếu không, bạn cần dùng alias trong helmfile.yaml
-      - application-umbrella:
-          # Chỉ cần 1 replica cho mỗi service để test
-          frontend-chart:
-            replicaCount: 1
-          backend-chart:
-            replicaCount: 1
+  #   values:
+  #     # Sử dụng key `application-umbrella` vì đó là tên chart trong `charts/`
+  #     # nếu không, bạn cần dùng alias trong helmfile.yaml
+  #     - application-umbrella:
+  #         # Chỉ cần 1 replica cho mỗi service để test
+  #         frontend-chart:
+  #           replicaCount: 1
+  #         backend-chart:
+  #           replicaCount: 1
           # # Cấu hình Ingress cho môi trường dev
           # ingress:
           #   enabled: true
@@ -32,6 +32,13 @@ releases:
           replicas: 1 # Chỉ cần 1 worker
         triggerer:
           replicas: 1 # Chỉ cần 1 triggerer
+          resources:
+            requests:
+              cpu: "100m"      # << Giảm yêu cầu xuống 0.1 core
+              memory: "256Mi"  # << Giảm yêu cầu xuống 256 MB RAM
+            limits:
+              cpu: "250m"      # << Giảm giới hạn
+              memory: "512Mi"  # << Giảm giới hạn
         extraEnvFrom:
           - secretRef:
               name: airflow-secrets # Tên K8s Secret đích

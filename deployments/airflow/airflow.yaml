@@ -2,8 +2,9 @@ executor: "KubernetesExecutor"
 
 images:
   airflow:
-    repository: gcr.io/alpine-figure-461007-i9/custom-airflow
-    tag: 1.16.0
+    # repository: gcr.io/alpine-figure-461007-i9/custom-airflow
+    repository: apache/airflow
+    tag: 2.10.5
     pullPolicy: Always
 
 serviceAccount:
@@ -50,7 +51,7 @@ dags:
     subPath: airflow/dags  # thư mục chứa DAGs trong repo
     depth: 1
     wait: 10
-    sshKeySecret: gitsync_ssh_key
+    sshKeySecret: gitsync-ssh-key
     rev: HEAD
 
 logs:
