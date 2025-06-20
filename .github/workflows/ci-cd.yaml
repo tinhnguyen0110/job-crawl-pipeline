@@ -36,10 +36,10 @@ jobs:
       # image_tag: ${{ steps.git_tag.outputs.tag }}
       image_tag: 4341142
     steps:
-      # - name: Checkout repository
-      #   uses: actions/checkout@v4
-      #   with:
-      #     fetch-depth: 0 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
       # - name: Get Image Tag (Git Commit SHA)
       #   id: git_tag
