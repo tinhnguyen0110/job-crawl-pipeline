@@ -86,13 +86,13 @@ jobs:
           # base_sha: ${{ github.event.before }}
           # sha: ${{ github.sha }}
       - name: List all changed files
-        run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
+        run: echo "${{ steps.file_checker.outputs.all_changed_files }}"
       - name: Debug Changed Outputs
         run: |
-          echo "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
-          echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
-          echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
-          echo "Any changed: ${{ steps.changed_files.outputs.any_changed }}"
+          echo "Backend changed: ${{ steps.file_checker.outputs.backend_changed }}"
+          echo "Frontend changed: ${{ steps.file_checker.outputs.frontend_changed }}"
+          echo "Airflow changed: ${{ steps.file_checker.outputs.airflow_changed }}"
+          echo "Any changed: ${{ steps.file_checker.outputs.any_changed }}"
 
       - name: Authenticate, Setup Docker, and Configure Cache
         # Chỉ chạy bước này nếu có bất kỳ thay đổi nào để tiết kiệm thời gian
