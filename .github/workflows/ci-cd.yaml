@@ -33,129 +33,130 @@ jobs:
       frontend_built: ${{ steps.changed_files.outputs.frontend_changed == 'true' }}
       airflow_built: ${{ steps.changed_files.outputs.airflow_changed == 'true' }}
       any_changed: ${{ steps.changed_files.outputs.any_changed == 'true' }}
-      image_tag: ${{ steps.git_tag.outputs.tag }}
+      # image_tag: ${{ steps.git_tag.outputs.tag }}
+      image_tag: 4341142
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
+      # - name: Checkout repository
+      #   uses: actions/checkout@v4
+      #   with:
+      #     fetch-depth: 0 
 
-      - name: Get Image Tag (Git Commit SHA)
-        id: git_tag
-        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      # - name: Get Image Tag (Git Commit SHA)
+      #   id: git_tag
+      #   run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      # --- Bước kiểm tra thay đổi file (Giữ nguyên) ---
-      - name: Check for file changes using manual git diff
-        id: changed_files
-        run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          echo "--- All changed files ---"
-          echo "${CHANGED_FILES}"
-          echo "-------------------------"
+      # # --- Bước kiểm tra thay đổi file (Giữ nguyên) ---
+      # - name: Check for file changes using manual git diff
+      #   id: changed_files
+      #   run: |
+      #     CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+      #     echo "--- All changed files ---"
+      #     echo "${CHANGED_FILES}"
+      #     echo "-------------------------"
 
-          # File tạm để ghi output
-          OUTPUT_FILE="$GITHUB_OUTPUT"
+      #     # File tạm để ghi output
+      #     OUTPUT_FILE="$GITHUB_OUTPUT"
 
-          echo "backend_changed=false" >> "$OUTPUT_FILE"
-          echo "frontend_changed=false" >> "$OUTPUT_FILE"
-          echo "airflow_changed=false" >> "$OUTPUT_FILE"
-          echo "any_changed=false" >> "$OUTPUT_FILE"
+      #     echo "backend_changed=false" >> "$OUTPUT_FILE"
+      #     echo "frontend_changed=false" >> "$OUTPUT_FILE"
+      #     echo "airflow_changed=false" >> "$OUTPUT_FILE"
+      #     echo "any_changed=false" >> "$OUTPUT_FILE"
 
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "Found changes, setting any_changed=true"
-            echo "any_changed=true" >> "$OUTPUT_FILE"
+      #     if [ -n "$CHANGED_FILES" ]; then
+      #       echo "Found changes, setting any_changed=true"
+      #       echo "any_changed=true" >> "$OUTPUT_FILE"
 
-            if echo "$CHANGED_FILES" | grep -qE "(^src/backend/|Dockerfile\.backend|\.trigger-backend)"; then
-              echo "Backend files changed: YES"
-              echo "backend_changed=true" >> "$OUTPUT_FILE"
-            fi
+      #       if echo "$CHANGED_FILES" | grep -qE "(^src/backend/|Dockerfile\.backend|\.trigger-backend)"; then
+      #         echo "Backend files changed: YES"
+      #         echo "backend_changed=true" >> "$OUTPUT_FILE"
+      #       fi
 
-            if echo "$CHANGED_FILES" | grep -qE "(^src/frontend/|Dockerfile\.frontend|\.trigger-frontend)"; then
-              echo "Frontend files changed: YES"
-              echo "frontend_changed=true" >> "$OUTPUT_FILE"
-            fi
+      #       if echo "$CHANGED_FILES" | grep -qE "(^src/frontend/|Dockerfile\.frontend|\.trigger-frontend)"; then
+      #         echo "Frontend files changed: YES"
+      #         echo "frontend_changed=true" >> "$OUTPUT_FILE"
+      #       fi
 
-            if echo "$CHANGED_FILES" | grep -qE "(^airflow/|airflow/Dockerfile|\.trigger-airflow)"; then
-              echo "Airflow files changed: YES"
-              echo "airflow_changed=true" >> "$OUTPUT_FILE"
-            fi
-          else
-            echo "No files changed in this push."
-          fi
+      #       if echo "$CHANGED_FILES" | grep -qE "(^airflow/|airflow/Dockerfile|\.trigger-airflow)"; then
+      #         echo "Airflow files changed: YES"
+      #         echo "airflow_changed=true" >> "$OUTPUT_FILE"
+      #       fi
+      #     else
+      #       echo "No files changed in this push."
+      #     fi
 
 
-      - name: List all changed files
-        run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
+      # - name: List all changed files
+      #   run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
 
-      - name: Debug Changed Outputs
-        run: |
-          echo  "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
-          echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
-          echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
-          echo "Any files changed: ${{ steps.changed_files.outputs.any_changed }}"
+      # - name: Debug Changed Outputs
+      #   run: |
+      #     echo  "Backend changed: ${{ steps.changed_files.outputs.backend_changed }}"
+      #     echo "Frontend changed: ${{ steps.changed_files.outputs.frontend_changed }}"
+      #     echo "Airflow changed: ${{ steps.changed_files.outputs.airflow_changed }}"
+      #     echo "Any files changed: ${{ steps.changed_files.outputs.any_changed }}"
 
-      - name: Setup GCP Auth
-        if: steps.changed_files.outputs.any_changed == 'true'
-        uses: ./.github/actions/setup-gcp-auth
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      # - name: Setup GCP Auth
+      #   if: steps.changed_files.outputs.any_changed == 'true'
+      #   uses: ./.github/actions/setup-gcp-auth
+      #   with:
+      #     workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      #     service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      # Gọi action cài đặt Docker
-      - name: Setup Docker for GAR
-        if: steps.changed_files.outputs.any_changed == 'true'
-        uses: ./.github/actions/setup-docker
-        with:
-          gar_location: ${{ env.GAR_REGION }}
+      # # Gọi action cài đặt Docker
+      # - name: Setup Docker for GAR
+      #   if: steps.changed_files.outputs.any_changed == 'true'
+      #   uses: ./.github/actions/setup-docker
+      #   with:
+      #     gar_location: ${{ env.GAR_REGION }}
 
-      - name: Build and Push Backend Image
-        id: build_backend
-        # Chỉ chạy nếu có thay đổi trong các file của backend
-        if: steps.changed_files.outputs.backend_changed == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./src/application/backend/
-          file: ./src/application/backend/Dockerfile.backend
-          push: true
-          tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:${{ steps.git_tag.outputs.tag }}
-          # Thêm cache
-          cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache
-          cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache,mode=max
-      - name: Build and Push Frontend Image
-        id: build_frontend
-        # Chỉ chạy nếu có thay đổi trong các file của frontend
-        if: steps.changed_files.outputs.frontend_changed == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./src/application/frontend/
-          file: ./src/application/frontend/Dockerfile.frontend
-          push: true
-          tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.git_tag.outputs.tag }}
-          # Thêm cache
-          cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache
-          cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache,mode=max
-      - name: Build and Push Airflow Image
-        id: build_airflow
-        # Chỉ chạy nếu có thay đổi trong các file của Airflow
-        if: steps.changed_files.outputs.airflow_changed == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./airflow/
-          file: ./airflow/Dockerfile
-          push: true
-          tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:${{ steps.git_tag.outputs.tag }}
-          # Thêm cache
-          cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache
-          cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache,mode=max
-      - name: Log what was built
-        run: |
-          echo "Image Tag: ${{ steps.git_tag.outputs.tag }}"
-          echo "Backend built: ${{ steps.changed_files.outputs.backend_changed }}"
-          echo "Frontend built: ${{ steps.changed_files.outputs.frontend_changed }}"
-          echo "Airflow built: ${{ steps.changed_files.outputs.airflow_changed }}"
-      - name: Debug image tag
-        run: | 
-          echo "Image tag is: ${{ steps.git_tag.outputs.tag }}"
+      # - name: Build and Push Backend Image
+      #   id: build_backend
+      #   # Chỉ chạy nếu có thay đổi trong các file của backend
+      #   if: steps.changed_files.outputs.backend_changed == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./src/application/backend/
+      #     file: ./src/application/backend/Dockerfile.backend
+      #     push: true
+      #     tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:${{ steps.git_tag.outputs.tag }}
+      #     # Thêm cache
+      #     cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache
+      #     cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/backend:cache,mode=max
+      # - name: Build and Push Frontend Image
+      #   id: build_frontend
+      #   # Chỉ chạy nếu có thay đổi trong các file của frontend
+      #   if: steps.changed_files.outputs.frontend_changed == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./src/application/frontend/
+      #     file: ./src/application/frontend/Dockerfile.frontend
+      #     push: true
+      #     tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:${{ steps.git_tag.outputs.tag }}
+      #     # Thêm cache
+      #     cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache
+      #     cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/frontend:cache,mode=max
+      # - name: Build and Push Airflow Image
+      #   id: build_airflow
+      #   # Chỉ chạy nếu có thay đổi trong các file của Airflow
+      #   if: steps.changed_files.outputs.airflow_changed == 'true'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./airflow/
+      #     file: ./airflow/Dockerfile
+      #     push: true
+      #     tags: ${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:${{ steps.git_tag.outputs.tag }}
+      #     # Thêm cache
+      #     cache-from: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache
+      #     cache-to: type=registry,ref=${{ env.GAR_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/airflow:cache,mode=max
+      # - name: Log what was built
+      #   run: |
+      #     echo "Image Tag: ${{ steps.git_tag.outputs.tag }}"
+      #     echo "Backend built: ${{ steps.changed_files.outputs.backend_changed }}"
+      #     echo "Frontend built: ${{ steps.changed_files.outputs.frontend_changed }}"
+      #     echo "Airflow built: ${{ steps.changed_files.outputs.airflow_changed }}"
+      # - name: Debug image tag
+      #   run: | 
+      #     echo "Image tag is: ${{ steps.git_tag.outputs.tag }}"
 
   deploy:
     name: Deploy to GKE
@@ -218,13 +219,13 @@ jobs:
           # Kiểm tra và thêm tham số cho từng image đã được build
           # Cách làm đúng chuẩn: thêm flag và giá trị của nó như 2 phần tử riêng biệt
           if [ "${{ needs.build-and-push.outputs.backend_built }}" = "true" ]; then
-            SET_ARGS+=(--set "backend-chart.image.tag=$TAG")
+            SET_ARGS+=(--set "backend-chart.image.tag=${TAG}")
           fi
           if [ "${{ needs.build-and-push.outputs.frontend_built }}" = "true" ]; then
-            SET_ARGS+=(--set "frontend-chart.image.tag=$TAG")
+            SET_ARGS+=(--set "frontend-chart.image.tag=${TAG}")
           fi
           if [ "${{ needs.build-and-push.outputs.airflow_built }}" = "true" ]; then
-            SET_ARGS+=(--set "images.airflow.tag=$TAG")
+            SET_ARGS+=(--set "images.airflow.tag=${TAG}")
           fi
           echo "Deploying to ${{ steps.environment.outputs.env_name }}..."
           echo "Applying extra args: ${SET_ARGS[@]}"
