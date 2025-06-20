@@ -47,43 +47,41 @@ jobs:
       - name: Check for file changes using manual git diff
         id: changed_files
         run: |
-          # Lấy danh sách tất cả các file đã thay đổi
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "--- All changed files ---"
           echo "${CHANGED_FILES}"
           echo "-------------------------"
 
-          # Khởi tạo tất cả các output là false
-          echo "backend_changed=false" >> $GITHUB_OUTPUT
-          echo "frontend_changed=false" >> $GITHUB_OUTPUT
-          echo "airflow_changed=false" >> $GITHUB_OUTPUT
-          echo "any_changed=false" >> $GITHUB_OUTPUT
+          # File tạm để ghi output
+          OUTPUT_FILE="$GITHUB_OUTPUT"
 
-          # Chỉ thực hiện kiểm tra chi tiết nếu có bất kỳ file nào thay đổi
+          echo "backend_changed=false" >> "$OUTPUT_FILE"
+          echo "frontend_changed=false" >> "$OUTPUT_FILE"
+          echo "airflow_changed=false" >> "$OUTPUT_FILE"
+          echo "any_changed=false" >> "$OUTPUT_FILE"
+
           if [ -n "$CHANGED_FILES" ]; then
             echo "Found changes, setting any_changed=true"
-            echo "any_changed=true" >> $GITHUB_OUTPUT
+            echo "any_changed=true" >> "$OUTPUT_FILE"
 
-            # --- Kiểm tra cho Backend ---
             if echo "$CHANGED_FILES" | grep -qE "(^src/backend/|Dockerfile\.backend|\.trigger-backend)"; then
               echo "Backend files changed: YES"
-              echo "backend_changed=true" >> $GITHUB_OUTPUT
+              echo "backend_changed=true" >> "$OUTPUT_FILE"
             fi
 
-            # --- Kiểm tra cho Frontend ---
             if echo "$CHANGED_FILES" | grep -qE "(^src/frontend/|Dockerfile\.frontend|\.trigger-frontend)"; then
               echo "Frontend files changed: YES"
-              echo "frontend_changed=true" >> $GITHUB_OUTPUT
+              echo "frontend_changed=true" >> "$OUTPUT_FILE"
             fi
 
-            # --- Kiểm tra cho Airflow ---
             if echo "$CHANGED_FILES" | grep -qE "(^airflow/|airflow/Dockerfile|\.trigger-airflow)"; then
               echo "Airflow files changed: YES"
-              echo "airflow_changed=true" >> $GITHUB_OUTPUT
+              echo "airflow_changed=true" >> "$OUTPUT_FILE"
             fi
           else
             echo "No files changed in this push."
           fi
+
 
       - name: List all changed files
         run: echo "${{ steps.changed_files.outputs.all_changed_files }}"
