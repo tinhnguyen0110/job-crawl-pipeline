@@ -13,7 +13,7 @@ env:
   # Tách biệt rõ ràng
   GAR_REGION: ${{ secrets.GCP_REGION }}
   GKE_ZONE: ${{ secrets.GCP_ZONE }}
-
+  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_REPO: "crawl2insight-repo"
 
