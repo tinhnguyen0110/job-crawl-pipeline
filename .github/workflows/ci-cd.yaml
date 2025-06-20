@@ -29,11 +29,14 @@ jobs:
     # Xuất ra các biến để job `deploy` sau này có thể sử dụng
     # Chúng ta sử dụng lại chính logic của bạn ở đây.
     outputs:
-      backend_built: ${{ steps.changed_files.outputs.backend_changed == 'true' }}
-      frontend_built: ${{ steps.changed_files.outputs.frontend_changed == 'true' }}
-      airflow_built: ${{ steps.changed_files.outputs.airflow_changed == 'true' }}
-      any_changed: ${{ steps.changed_files.outputs.any_changed == 'true' }}
+      # backend_built: ${{ steps.changed_files.outputs.backend_changed == 'true' }}
+      # frontend_built: ${{ steps.changed_files.outputs.frontend_changed == 'true' }}
+      # airflow_built: ${{ steps.changed_files.outputs.airflow_changed == 'true' }}
+      # any_changed: ${{ steps.changed_files.outputs.any_changed == 'true' }}
       # image_tag: ${{ steps.git_tag.outputs.tag }}
+      backend_built: true
+      frontend_built: true
+      airflow_built: true 
       image_tag: 4341142
     steps:
       - name: Checkout repository
