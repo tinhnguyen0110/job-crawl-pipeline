@@ -34,11 +34,11 @@ jobs:
       airflow_built: ${{ steps.changed_files.outputs.airflow_changed == 'true' }}
       any_changed: ${{ steps.changed_files.outputs.any_changed == 'true' }}
 
-    # steps:
-    #   - name: Checkout repository
-    #     uses: actions/checkout@v4
-    #     with:
-    #       fetch-depth: 0 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
     #   - name: Get Image Tag (Git Commit SHA)
     #     id: image_tag
