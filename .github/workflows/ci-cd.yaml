@@ -229,7 +229,8 @@ jobs:
             SET_ARGS+=(--set "frontend-chart.image.tag=${TAG}")
           fi
           if [ "${{ needs.build-and-push.outputs.airflow_built }}" = "true" ]; then
-            SET_ARGS+=(--set "images.airflow.tag=${TAG}")
+            AIRFLOW_TAG="\"${TAG}\""
+            SET_ARGS+=(--set "images.airflow.tag=${AIRFLOW_TAG}")
           fi
           echo "Deploying to ${{ steps.environment.outputs.env_name }}..."
           echo "Applying extra args: ${SET_ARGS[@]}"
