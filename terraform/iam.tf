@@ -52,9 +52,16 @@ resource "google_service_account_iam_member" "github_runner_impersonation" {
 
   # Định danh của GitHub Actions
   # Cú pháp: "principalSet://iam.googleapis.com/{POOL_ID}/attribute.repository/{ORG_NAME}/{REPO_NAME}"
- member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/your-github-org/your-repo-name"
-# member = "principalSet://iam.googleapis.com/projects/${var.project_number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.github_pool.workload_identity_pool_id}/attribute.repository/your-github-org/your-repo-name"
+ #member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/your-github-org/your-repo-name"
+ member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/tinhnguyen0110/job-crawl-pipeline"
 
+}
+
+# Cấp quyền để lấy access token
+resource "google_service_account_iam_member" "github_token_creator" {
+  service_account_id = google_service_account.github_runner_sa.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/tinhnguyen0110/job-crawl-pipeline"
 }
 
 # Quyền deploy lên GKE
