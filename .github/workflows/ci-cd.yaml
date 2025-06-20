@@ -48,8 +48,12 @@ jobs:
         id: changed_files
         uses: tj-actions/changed-files@v44
         with:
+          # Sử dụng phương pháp so sánh đáng tin cậy hơn
           since_last_remote_commit: true
-          files_yaml: |
+          
+          # Cú pháp đúng cho chuỗi nhiều dòng trong YAML
+          files_yaml: | # <<< BẮT BUỘC CÓ DẤU `|`
+            # Tất cả các dòng dưới đây phải thụt vào so với `files_yaml`
             backend:
               - src/backend/**
               - Dockerfile.backend
