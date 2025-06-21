@@ -1,4 +1,8 @@
-# main.tf (Improved GKE Block)
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
 resource "google_container_cluster" "primary" {
   project  = var.project_id
   name     = var.gke_cluster_name

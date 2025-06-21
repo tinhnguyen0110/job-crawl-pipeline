@@ -48,8 +48,7 @@ resource "google_secret_manager_secret" "gitsync_ssh_key" {
   }
 }
 
-# 3. Thêm phiên bản đầu tiên cho secret (giá trị thực)
-# !!! QUAN TRỌNG: Hãy thay thế các giá trị placeholder bằng giá trị thật của bạn
+# 3. Tạo các phiên bản secret với dữ liệu thực tế
 resource "google_secret_manager_secret_version" "airflow_fernet_key_v1" {
   secret      = google_secret_manager_secret.airflow_fernet_key.id
   secret_data = "PpwOpKTKaHYo-TuiwCIMSwxNmBJknIf4rV5KctQ_8-k="
@@ -70,8 +69,8 @@ resource "google_secret_manager_secret_version" "litellm_master_key_v1" {
 resource "google_secret_manager_secret_version" "litellm_ui_credentials_v1" {
   secret      = google_secret_manager_secret.litellm_ui_credentials.id
   secret_data = jsonencode({
-    username = "admin"
-    password = "admin123"
+    username = var.litellm_ui_username,
+    password = var.litellm_ui_password
   })
 }
 

@@ -45,3 +45,6 @@ temp/
 .DS_Store
 .vscode/
 .history/
+
+.trigger*
+*.pub

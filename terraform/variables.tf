@@ -8,8 +8,8 @@ variable "litellm_master_key" {
 variable "google_api_key" {
   description = "key for Google API"
   type        = string
-  sensitive   = true # Rất quan trọng! Terraform sẽ ẩn giá trị này trong output.
-  default     = "AIzaSyAqFlsPpDMXnwc8iJ-WmpAsaozY6AVR-sA"
+  sensitive   = true 
+  default     = ""
 }
 
 variable "project_id" {

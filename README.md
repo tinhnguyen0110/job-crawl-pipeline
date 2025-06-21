@@ -40,7 +40,7 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 </div>
 <br clear="right">
 
-<img src="system.png">
+<img src="docs/system.png">
 
 ## 🔷 Table of Contents
 ### 1. 📌 About The Project
@@ -2400,19 +2400,6 @@ echo 'INSERT-TEST-COMMAND-HERE'
 ## 🔳 Roadmap
 
 ---
-
-## ◻️ Contributing
-</details>
-
-<details closed>
-<summary>Contributor Graph</summary>
-<br>
-<p align="left">
-   <a href="https://LOCAL{///}graphs/contributors">
-      <img src="https://contrib.rocks/image?repo=/">
-   </a>
-</p>
-</details>
 
 ---
 
