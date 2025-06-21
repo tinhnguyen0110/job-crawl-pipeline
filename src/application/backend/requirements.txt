@@ -1,0 +1,18 @@
+# FastAPI framework
+fastapi
+
+# ASGI server for FastAPI
+uvicorn[standard]
+
+# Pydantic, including settings management
+pydantic
+pydantic-settings
+
+# SQLAlchemy ORM for database interaction
+SQLAlchemy
+
+# Database driver for PostgreSQL
+psycopg2-binary
+
+# To read .env file
+python-dotenv

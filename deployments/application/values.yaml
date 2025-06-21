@@ -1,0 +1,14 @@
+# deployment/application/values.yaml
+frontend-chart:
+  image:
+    repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/frontend # << ĐƯỜNG DẪN MỚI
+    tag: "latest" # Tag này sẽ được ghi đè bởi CI/CD
+  servicePort: 80
+  backend:
+    serviceName: "backend-service"
+    servicePort: 80
+backend-chart:
+  image:
+    repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/backend # << ĐƯỜNG DẪN MỚI
+    tag: "latest" # Tag này sẽ được ghi đè bởi CI/CD
+  fullnameOverride: "backend-service"

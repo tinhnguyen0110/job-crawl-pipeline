@@ -1,0 +1,36 @@
+# templates/ingress.yaml (Phiên bản đã sửa lỗi và tối ưu)
+{{if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "frontend-chart.fullname" . }}
+  labels:
+    {{- include "frontend-chart.labels" . | nindent 4 }}
+  # SỬA LỖI 1: Tách riêng khối annotations.
+  # Chỉ render block "annotations" nếu nó thực sự được định nghĩa trong values.yaml.
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    # Dùng toYaml để render tất cả các key-value trong map annotations.
+    # Cách này linh hoạt, cho phép người dùng thêm bất kỳ annotation nào họ muốn.
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  # CẢI THIỆN: Sử dụng trường ingressClassName theo chuẩn mới.
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "frontend-chart.fullname" $ }}
+                port:
+                  # Port name phải khớp với name trong service.yaml (là 'http')
+                  name: http
+          {{- end }}
+    {{- end }}
+{{- end }}

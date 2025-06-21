@@ -1,0 +1,49 @@
+replicaCount: 1
+image:
+  repository: gcr.io/alpine-figure-461007-i9/react-frontend
+  pullPolicy: Always
+  # tag được để trống, khuyến khích bạn ghi đè khi chạy lệnh helm install/upgrade
+  # Ví dụ: --set image.tag=v3
+  tag: "v2"
+
+service:
+  name: react-frontend-service
+  type: ClusterIP
+  port: 80         # Cổng của Service
+  targetPort: 80   # Cổng của container
+
+# Cấu hình tài nguyên cho container (rất quan trọng cho production)
+resources:
+  requests:
+    cpu: 100m      # Yêu cầu 0.1 core CPU
+    memory: 128Mi  # Yêu cầu 128 MB RAM
+  limits:
+    cpu: 250m      # Giới hạn ở 0.25 core CPU
+    memory: 256Mi  # Giới hạn ở 256 MB RAM
+
+ingress:
+  enabled: true # Mặc định tắt, người dùng sẽ bật khi cần
+  className: "gce" # Chỉ định dùng GKE Ingress Controller
+  annotations:
+    kubernetes.io/ingress.class: "gce"  # <== BẮT BUỘC CHO GKE
+    kubernetes.io/ingress.global-static-ip-name: joblytics-static-ip
+  hosts:
+    - host: joblytics.io.vn # Tên miền ví dụ
+      paths:
+      - path: /          # React app entry point
+        pathType: Prefix
+      - path: /assets/    # Static assets
+        pathType: Prefix
+      - path: /vite.svg   # Vite favicon
+        pathType: Prefix
+      - path: /api/       # API proxy
+        pathType: Prefix
+
+backend:
+  serviceName: "my-backend-release-backend-chart"
+  servicePort: 80
+
+ingressClass:
+  create: true
+  name: gce
+  isDefault: true

@@ -1,23 +1,50 @@
-# Python
+# Môi trường Python
 __pycache__/
 *.pyc
-
-# Virtual environments
 .venv/
-env/
 venv/
+env/
+.pytest_cache/
 
-# Logs
-logs/
-*.log
+# File môi trường !
+.env
+*.env
 
 # Output CSVs
 *.csv
-
-# Credentials / config
-config/config.yaml
 .env
-
+# app/
+data/
 # Airflow
 airflow.db
 *.pid
+*.history
+default-values.yaml
+airflow-gitsync
+rendered-manifests.yaml
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+
+# Môi trường Node.js (nếu có trong frontend)
+node_modules/
+dist/
+build/
+.npm/
+
+# File tạm và log
+temp/
+*.log
+*.swp
+
+# Các file của hệ điều hành và IDE
+.DS_Store
+.vscode/
+.history/
+
+.trigger*
+*.pub

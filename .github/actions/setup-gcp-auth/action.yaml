@@ -1,0 +1,18 @@
+# .github/actions/setup-gcp-auth/action.yaml
+name: "Setup GCP Auth"
+description: "Authenticate to GCP using Workload Identity Federation"
+inputs:
+  workload_identity_provider:
+    required: true
+    description: "Workload Identity Provider ID"
+  service_account:
+    required: true
+    description: "Service Account email"
+runs:
+  using: "composite"
+  steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account }}

@@ -1,4 +1,4 @@
-FROM apache/airflow:2.8.1-python3.10
+FROM apache/airflow:2.10.5-python3.12
 # 👇 Cài Python packages (khuyến nghị Airflow chạy dưới user airflow)
 USER airflow
 # Copy requirements.txt và cài Python dependencies bằng pip (bắt buộc ở user airflow)
@@ -15,3 +15,6 @@ RUN apt-get update && apt-get install -y libnss3 libatk1.0-0 libxss1 libasound2 
 # Trở lại user airflow
 USER airflow
 
+#test
+ENV PATH=/home/airflow/.local/bin:$PATH \
+    PYTHONPATH=/home/airflow/.local/lib/python3.12/site-packages:$PYTHONPATH

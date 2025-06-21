@@ -1,2 +1,0 @@
-git remote add origin https://github.com/tinhnguyen0110/job-crawl-pipeline.git
-readmeai --api ollama --model mistral -r D:\Data\Crawl2Insight_2

@@ -1,0 +1,17 @@
+# crawl2insight-app/Chart.yaml
+apiVersion: v2
+name: crawl2insight-app
+description: Helm chart cha triển khai toàn bộ ứng dụng Crawl2Insight.
+type: application # Đặt type là 'application' cho chart cha
+version: 0.1.0
+
+# Đây là phần quan trọng nhất
+# Nó khai báo các chart con mà chart này quản lý
+dependencies:
+- name: backend-chart
+  version: "0.1.0" 
+  repository: "file://./charts/backend-chart" 
+
+- name: frontend-chart
+  version: "0.1.0" 
+  repository: "file://./charts/frontend-chart"
