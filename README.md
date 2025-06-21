@@ -37,6 +37,7 @@
 <br clear="right">
 
 ---
+<img src="system.png">
 
 ## 🔷 Table of Contents
 
