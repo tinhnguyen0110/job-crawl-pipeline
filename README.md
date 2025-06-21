@@ -95,7 +95,6 @@ Detailed architecture, setup instructions, and deployment configurations can be 
     ├── deployments
     │   ├── airflow
     │   ├── application
-    │   ├── debug-pod.yaml
     │   ├── external-secrets
     │   ├── litellm
     │   └── mainfests
@@ -104,12 +103,10 @@ Detailed architecture, setup instructions, and deployment configurations can be 
     │   ├── development.yaml
     │   └── production.yaml
     ├── helmfile.yaml
-    ├── PROJECT_CONTEXT.md
     ├── requirements.txt
     ├── src
     │   ├── application
     │   └── raw_pipeline
-    ├── t.txt
     └── terraform
         ├── gcp_services.tf
         ├── iam.tf
@@ -2348,7 +2345,6 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 
 This project requires the following dependencies:
 
-- **Programming Language:** unknown
 - **Package Manager:** Pip, Npm
 - **Container Runtime:** Docker
 
@@ -2369,35 +2365,7 @@ Build  from the source and intsall dependencies:
 
 Run the project with:
 
-**Using [docker](https://www.docker.com/):**
-```sh
-docker run -it {image_name}
-```
-**Using [pip](None):**
-```sh
-echo 'INSERT-RUN-COMMAND-HERE'
-```
-**Using [npm](None):**
-```sh
-echo 'INSERT-RUN-COMMAND-HERE'
-```
-
 ### 🔲 Testing
-
- uses the {__test_framework__} test framework. Run the test suite with:
-
-**Using [pip](None):**
-```sh
-echo 'INSERT-TEST-COMMAND-HERE'
-```
-**Using [npm](None):**
-```sh
-echo 'INSERT-TEST-COMMAND-HERE'
-```
-
----
-
-## 🔳 Roadmap
 
 ---
 
