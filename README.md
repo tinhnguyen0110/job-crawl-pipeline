@@ -1,16 +1,20 @@
-<div id="top">
+<!-- <div id="top">
 
 <!-- HEADER STYLE: MODERN -->
-<div align="left" style="position: relative; width: 100%; height: 100%; ">
+<!-- <div align="left" style="position: relative; width: 100%; height: 100%; "> -->
 
-<img src=".png" width="30%" style="position: absolute; top: 0; right: 0;" alt="Project Logo"/>
+<!-- <img src=".png" width="30%" style="position: absolute; top: 0; right: 0;" alt="Project Logo"/> --> 
 
-# <code>❯ REPLACE-ME</code>
+# <code>❯ CRAWL2INSIGHT</code>
+## 🔶 Overview:
+Introduction
+Crawl2Insight is a full-stack job search and analysis platform, built with FastAPI and React. It features powerful data pipelines orchestrated by Airflow and an AI gateway powered by LiteLLM. The entire system is designed for scalable deployment on Google Kubernetes Engine (GKE), providing robust job market analytics and insights.
+
+The project fully embraces modern DevOps and GitOps principles. Infrastructure is managed declaratively via Terraform, while application deployments are orchestrated by Helmfile. The end-to-end CI/CD pipeline is built on GitHub Actions, automating everything from version-controlled image builds in Google Artifact Registry to environment-specific deployments. The architectural roadmap includes a comprehensive observability stack with Prometheus and Grafana for performance monitoring and the ELK stack for centralized logging.
+
+Detailed architecture, setup instructions, and deployment configurations can be found within this repository's documentation.
 
 <em><em>
-
-<!-- BADGES -->
-<!-- local repository, no metadata badges. -->
 
 <em>Built with the tools and technologies:</em>
 
@@ -35,32 +39,43 @@
 </div>
 </div>
 <br clear="right">
-
 ---
 <img src="system.png">
 
 ## 🔷 Table of Contents
 
-- [🔷 Table of Contents](#-table-of-contents)
-- [🔶 Overview](#-overview)
-- [🔵 Features](#-features)
-- [🟠 Project Structure](#-project-structure)
-    - [🟣 Project Index](#-project-index)
-- [🟡 Getting Started](#-getting-started)
-    - [🔺 Prerequisites](#-prerequisites)
-    - [🔹 Installation](#-installation)
-    - [◼ ️ Usage](#-usage)
-    - [🔲 Testing](#-testing)
-- [🔳 Roadmap](#-roadmap)
-- [◻ ️ Contributing](#-contributing)
-- [⬛ License](#-license)
-- [✨ Acknowledgments](#-acknowledgments)
+### 1. 📌 About The Project
+
+- [🔶 Overview](##overview)
+- [✨ Features](#features)
+- [🛠️ Tech Stack](#tech-stack)
+- [🏗️ Architecture Diagram](#architecture-diagram)
+
+### 2. 🚀 Getting Started
+- [📋 Prerequisites](#prerequisites)
+- [⚙️ Local Development Setup](#local-development-setup)
+
+### 3. 🌍 Deployment
+- [📦 Step 1: Provision Infrastructure (Terraform)](#step-1-provision-infrastructure-terraform)
+- [🤫 Step 2: Configure Secrets](#step-2-configure-secrets)
+- [🚀 Step 3: Deploy Applications (Helmfile)](#step-3-deploy-applications-helmfile)
+
+### 4. 🔄 CI/CD Pipeline
+- [🧩 Workflow Overview](#workflow-overview)
+- [🔬 CI: Conditional Builds & Caching](#ci-conditional-builds--caching)
+- [🚢 CD: Automated Deployment](#cd-automated-deployment)
+
+### 5. 📡 Observability
+- [📊 Monitoring & Alerting (Prometheus & Grafana)](#monitoring--alerting-prometheus--grafana)
+- [📝 Logging (ELK Stack)](#logging-elk-stack)
+
+### 6. 🤝 Contributing
+- [🛠️ How to Contribute](#how-to-contribute)
+
+### 7. 📄 License
+- [📃 License Information](#license-information)
 
 ---
-
-## 🔶 Overview
-
-
 
 ---
 
