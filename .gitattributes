@@ -1,0 +1,3 @@
+helm/** linguist-vendored
+charts/** linguist-vendored
+templates/** linguist-vendored

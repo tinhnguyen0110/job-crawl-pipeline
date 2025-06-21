@@ -14,8 +14,10 @@ The project fully embraces modern DevOps and GitOps principles. Infrastructure i
 
 Detailed architecture, setup instructions, and deployment configurations can be found within this repository's documentation.
 
-<em><em>
+[![Live Demo](https://img.shields.io/badge/Live_Demo-joblytics.io.vn-brightgreen?style=for-the-badge&logo=react)](http://joblytics.io.vn)
+---
 
+<em><em>
 <em>Built with the tools and technologies:</em>
 
 <img src="https://img.shields.io/badge/JSON-000000.svg?style=flat-square&logo=JSON&logoColor=white" alt="JSON">
@@ -42,6 +44,7 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 
 <img src="docs/system.png">
 
+
 ## 🔷 Table of Contents
 ### 1. 📌 About The Project
 - [🔶 Overview](#-overview)
@@ -49,8 +52,8 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 - [🏗️ Project Structure](#-project-structure)
 - [🟣 Project index](#-project-index)
 ### 2. 🚀 Getting Started
-- [📋 Prerequisites](#prerequisites)
-- [⚙️ Local Development Setup](#local-development-setup)
+- [📋 Prerequisites](#-prerequisites)
+- [⚙️ Local Development Setup](#-local-development-setup)
 
 ### 3. 🌍 Deployment
 - [📦 Step 1: Provision Infrastructure (Terraform)](#step-1-provision-infrastructure-terraform)
@@ -72,8 +75,7 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 ### 7. 📄 License
 - [📃 License Information](#license-information)
 
-
-
+---
 ## ✨ Features
 
 |      | Component       | 	         Details                              |
@@ -2338,38 +2340,178 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 </details>
 
 ---
+### 2. 🚀 Getting Started
 
-## 🟡 Getting Started
+This section will guide you through setting up the project for local development.
 
-### 🔺 Prerequisites
+#### 📋 Prerequisites
 
-This project requires the following dependencies:
+Before you begin, ensure you have the following tools installed on your local machine:
 
-- **Package Manager:** Pip, Npm
-- **Container Runtime:** Docker
+* **Git:** For cloning the repository and version control.
+* **Google Cloud SDK (`gcloud`):** For authenticating with and managing GCP resources. ([Install Guide](https://cloud.google.com/sdk/docs/install))
+* **`kubectl`:** The Kubernetes command-line tool. ([Install Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+* **Terraform:** The Infrastructure as Code tool we use to manage GCP resources. ([Install Guide](https://developer.hashicorp.com/terraform/downloads))
+* **Helm:** The package manager for Kubernetes. ([Install Guide](https://helm.sh/docs/intro/install/))
+* **Helmfile:** The orchestrator for deploying our Helm charts. ([Install Guide](https://github.com/helmfile/helmfile#installation))
+* **Docker Desktop:** For building and running containers locally. ([Install Guide](https://www.docker.com/products/docker-desktop/))
+* **Python & `venv`:** For running the backend and Airflow DAGs locally.
+* **Node.js & `npm`:** For running the frontend locally.
 
-### 🔹 Installation
+#### ⚙️ Local Development Setup
 
-Build  from the source and intsall dependencies:
-
-1. **Clone the repository:**
-
-    ```sh
-    ❯ git clone ../
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/tinhnguyen0110/job-crawl-pipeline.git](https://github.com/tinhnguyen0110/job-crawl-pipeline.git)
+    cd job-crawl-pipeline
     ```
 
-2. **Navigate to the project directory:**
+2.  **Authenticate with GCP:**
+    Log in with your Google account and set up Application Default Credentials, which many client libraries use.
+    ```bash
+    gcloud auth login
+    gcloud auth application-default login
+    ```
 
+3.  **Set up Backend (FastAPI):**
+    ```bash
+    # Navigate to the backend directory
+    cd src/backend
 
-### ◼️ Usage
+    # Create and activate a Python virtual environment
+    python -m venv .venv
+    source .venv/bin/activate
 
-Run the project with:
+    # Install dependencies
+    pip install -r requirements.txt
 
-### 🔲 Testing
+    # Create a local environment file from the example
+    cp .env.example .env
+
+    # Run the development server
+    uvicorn main:app --reload
+    ```
+
+4.  **Set up Frontend (React):**
+    ```bash
+    # Navigate to the frontend directory
+    cd src/frontend
+
+    # Install dependencies
+    npm install
+
+    # Create a local environment file
+    # Ensure VITE_API_BASE_URL points to your local backend (e.g., http://localhost:8000)
+    cp .env.example .env.local
+
+    # Run the development server
+    npm run dev
+    ```
 
 ---
 
+### 3. 🌍 Deployment
+
+This guide covers the end-to-end process of deploying the entire system to a fresh Google Kubernetes Engine (GKE) cluster.
+
+#### 📦 Step 1: Provision Infrastructure (Terraform)
+
+This step uses Terraform to create all the necessary GCP resources, including the GKE cluster, Artifact Registry, IAM Service Accounts, and Secret Manager shells.
+
+1.  **Navigate to the Terraform directory:**
+    ```bash
+    cd terraform
+    ```
+
+2.  **Create a `terraform.tfvars` file:**
+    This file will contain the specific variables for your deployment. Create the file and populate it with your project details.
+    ```tfvars
+    # terraform.tfvars
+    project_id       = "alpine-figure-461007-i9"
+    region           = "asia-southeast1"
+    gke_cluster_name = "simple-cluster"
+    gke_cluster_zone = "asia-southeast1-a"
+    ```
+
+3.  **Initialize and Apply Terraform:**
+    ```bash
+    # Initialize the providers
+    terraform init
+
+    # (Recommended) Review the execution plan
+    terraform plan -var-file="terraform.tfvars"
+
+    # Apply the plan to create the infrastructure
+    terraform apply -var-file="terraform.tfvars"
+    ```
+
+#### 🤫 Step 2: Configure Secrets
+
+After Terraform runs, the secret "containers" exist in GCP Secret Manager, but they are empty. You must populate them with their initial values.
+
+1.  **Generate an SSH Key for Git-Sync:**
+    ```bash
+    # This key will be used by Airflow to clone the DAGs repository
+    mkdir -p .ssh-keys
+    ssh-keygen -t rsa -b 4096 -f ./.ssh-keys/gitsync_id_rsa -N ""
+    # Remember to add the public key (.pub) as a Deploy Key on your GitHub repo.
+    ```
+
+2.  **Add Secret Versions using `gcloud`:**
+    ```bash
+    # Add the Git-Sync SSH private key
+    gcloud secrets versions add gitsync-ssh-key --data-file=".ssh-keys/gitsync_id_rsa"
+
+    # Add the Airflow Fernet key (generate one if you don't have it)
+    gcloud secrets versions add airflow-fernet-key --data-file="<(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
+    
+    # Add the Airflow UI credentials from a local JSON file
+    # Example airflow-creds.json: { "username": "admin", "password": "MySecretPassword123" }
+    gcloud secrets versions add airflow-ui-credentials --data-file="airflow-creds.json"
+    
+    # Add other secrets like LiteLLM API keys...
+    gcloud secrets versions add litellm-openai-api-key --data-file="path/to/openai.key"
+    ```
+
+#### 🚀 Step 3: Deploy Applications (Helmfile)
+
+With the infrastructure and secrets in place, you can now deploy all applications.
+
+1.  **Apply External Secrets Definitions:**
+    This step tells the External Secrets Operator in your cluster how to map GCP secrets to Kubernetes secrets.
+    ```bash
+    kubectl apply -f manifests/external-secrets/
+    ```
+    Wait a minute for the secrets to be synced. You can check with `kubectl get secrets -n <namespace>`.
+
+2.  **Run Helmfile:**
+    This single command orchestrates the deployment of all applications (`app-services`, `airflow-system`, `litellm-service`) to their respective namespaces with the correct configurations for the specified environment.
+    ```bash
+    # Run a diff first to see the planned changes (safe mode)
+    helmfile -e development diff
+
+    # Apply the changes to the cluster
+    helmfile -e development apply
+    ```
+
 ---
+
+### 4. 🔄 CI/CD Pipeline
+
+This project is equipped with a complete, automated CI/CD pipeline using GitHub Actions.
+
+#### 🧩 Workflow Overview
+The pipeline is defined in `.github/workflows/ci-cd.yaml` and is triggered on every `git push` to the `main` (production) and `develop`/`deploy_gke` (development) branches. It consists of two primary jobs that run sequentially: `build-and-push` and `deploy`.
+
+#### 🔬 CI: Conditional Builds & Caching
+The Continuous Integration (CI) job (`build-and-push`) is highly optimized:
+* **Intelligent Change Detection:** The pipeline doesn't rebuild everything on every commit. It uses `git diff` to determine which specific service (`frontend`, `backend`, `airflow`) has changed and only builds the necessary Docker images.
+* **Build Caching:** Docker layer caching is implemented using Google Artifact Registry as a cache backend. This significantly speeds up build times for subsequent commits by reusing unchanged layers.
+
+#### 🚢 CD: Automated Deployment
+The Continuous Deployment (CD) job (`deploy`) brings the new code to life:
+* **Dynamic Tag Injection:** After a successful build, the `deploy` job is triggered. It receives the new image tags (prefixed with `g-` and the Git commit SHA) from the build job.
+* **Declarative Deployment:** The job executes `helmfile apply`, using `--set` arguments to dynamically override the `image.tag` for only the services that were rebuilt. Helmfile then reconciles the desired state with the cluster, and Kubernetes performs a safe, zero-downtime rolling update for the affected applications.
 
 ## ⬛ License
 
