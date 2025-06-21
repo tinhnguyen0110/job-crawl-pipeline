@@ -6,7 +6,7 @@
 <!-- <img src=".png" width="30%" style="position: absolute; top: 0; right: 0;" alt="Project Logo"/> --> 
 
 # <code>❯ CRAWL2INSIGHT</code>
-## 🔶 Overview:
+## 🔶 Overview
 Introduction
 Crawl2Insight is a full-stack job search and analysis platform, built with FastAPI and React. It features powerful data pipelines orchestrated by Airflow and an AI gateway powered by LiteLLM. The entire system is designed for scalable deployment on Google Kubernetes Engine (GKE), providing robust job market analytics and insights.
 
@@ -39,18 +39,15 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 </div>
 </div>
 <br clear="right">
----
+
 <img src="system.png">
 
 ## 🔷 Table of Contents
-
 ### 1. 📌 About The Project
-
-- [🔶 Overview](##overview)
-- [✨ Features](#features)
-- [🛠️ Tech Stack](#tech-stack)
-- [🏗️ Architecture Diagram](#architecture-diagram)
-
+- [🔶 Overview](#-overview)
+- [✨ Features](#-features)
+- [🏗️ Project Structure](#-project-structure)
+- [🟣 Project index](#-project-index)
 ### 2. 🚀 Getting Started
 - [📋 Prerequisites](#prerequisites)
 - [⚙️ Local Development Setup](#local-development-setup)
@@ -75,32 +72,19 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 ### 7. 📄 License
 - [📃 License Information](#license-information)
 
----
 
----
 
-## 🔵 Features
+## ✨ Features
 
-|      | Component       | Details                              |
-| :--- | :-------------- | :----------------------------------- |
-| ⚙️  | **Architecture**  | <ul><li>Microservices</li><li>Frontend: React/Vite</li><li>Backend: FastAPI</li><li>Containerized with Docker</li><li>Orchestrated with Kubernetes</li></ul> |
-| 🔩 | **Code Quality**  | <ul><li>ESLint for JS</li><li>PEP8 for Python</li><li>Consistent linting</li></ul> |
-| 📄 | **Documentation** | <ul><li>Dockerfile: Airflow</li><li>Requirements: `requirements.txt`</li><li>CI/CD: `.github/workflows/ci-cd.yaml`</li></ul> |
-| 🔌 | **Integrations**  | <ul><li>GitHub Actions</li><li>Terraform</li><li>Prometheus & Grafana</li></ul> |
-| 🧩 | **Modularity**    | <ul><li>Helm charts</li><li>Modular templates (`tpl`)</li><li>Microservice separation</li></ul> |
-| 🧪 | **Testing**       | <ul><li>CI/CD integrated</li><li>Unit tests (not detailed)</li></ul> |
-| ⚡️  | **Performance**   | <ul><li>FastAPI for high performance</li><li>Uvicorn ASGI server</li></ul> |
-| 🛡️ | **Security**      | <ul><li>RBAC policies</li><li>Network policies</li><li>Secrets management</li></ul> |
-| 📦 | **Dependencies**  | <ul><li>Python: FastAPI, SQLAlchemy</li><li>JS: React, Vite</li><li>Helm charts</li></ul> |
-| 🚀 | **Scalability**   | <ul><li>Kubernetes deployment</li><li>Horizontal Pod Autoscaling (HPA)</li><li>Stateful and stateless components</li></ul> |
-```
+|      | Component       | 	         Details                              |
+| :--- | :-------------- | :----------------------------------|
+| 🚀 | **Application**  | <ul><li>Automated Job Data Crawling: Utilizes Airflow pipelines to automatically gather job market data.</li><li>AI-Powered Insights: Leverages LiteLLM to process data and provide intelligent analytics.</li><li>Interactive UI: A modern, responsive user interface built with React for data search and visualization.</li><li>High-Performance API: A fast and reliable backend API powered by FastAPI.</li></ul>
+| 🏗️ | **Architecture** | <ul><li>Scalable & Resilient: Built on a Kubernetes-native microservice architecture. Supports Horizontal Pod Autoscaling (HPA) to handle high-load scenarios.</li><li>Secure by Design: Employs a robust security model with centralized secrets management (GCP Secret Manager & ESO) and keyless authentication (Workload Identity).</li></ul>
+| 🤖 | **DevOps & Automationy**   | <ul><li>Automated Job Data Crawling: Utilizes Airflow pipelines to automatically gather job market data</li><li>AI-Powered Insights: Leverages LiteLLM to process data and provide intelligent analytics</li><li>Interactive UI: A modern, responsive user interface built with React for data search and visualization</li><li>High-Performance API: A fast and reliable backend API powered by FastAPI</li></ul> |
 
----
-
-## 🟠 Project Structure
-
+## 🏗️ Project Structure
 ```sh
-└── /
+└── Crawl2Insight/
     ├── .github
     │   ├── actions
     │   └── workflows
@@ -2380,45 +2364,6 @@ Build  from the source and intsall dependencies:
 
 2. **Navigate to the project directory:**
 
-    ```sh
-    ❯ cd 
-    ```
-
-3. **Install the dependencies:**
-
-<!-- SHIELDS BADGE CURRENTLY DISABLED -->
-	<!-- [![docker][docker-shield]][docker-link] -->
-	<!-- REFERENCE LINKS -->
-	<!-- [docker-shield]: https://img.shields.io/badge/Docker-2CA5E0.svg?style={badge_style}&logo=docker&logoColor=white -->
-	<!-- [docker-link]: https://www.docker.com/ -->
-
-	**Using [docker](https://www.docker.com/):**
-
-	```sh
-	❯ docker build -t / .
-	```
-<!-- SHIELDS BADGE CURRENTLY DISABLED -->
-	<!-- [![pip][pip-shield]][pip-link] -->
-	<!-- REFERENCE LINKS -->
-	<!-- [pip-shield]: None -->
-	<!-- [pip-link]: None -->
-
-	**Using [pip](None):**
-
-	```sh
-	❯ echo 'INSERT-INSTALL-COMMAND-HERE'
-	```
-<!-- SHIELDS BADGE CURRENTLY DISABLED -->
-	<!-- [![npm][npm-shield]][npm-link] -->
-	<!-- REFERENCE LINKS -->
-	<!-- [npm-shield]: None -->
-	<!-- [npm-link]: None -->
-
-	**Using [npm](None):**
-
-	```sh
-	❯ echo 'INSERT-INSTALL-COMMAND-HERE'
-	```
 
 ### ◼️ Usage
 
@@ -2454,41 +2399,9 @@ echo 'INSERT-TEST-COMMAND-HERE'
 
 ## 🔳 Roadmap
 
-- [X] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
-
 ---
 
 ## ◻️ Contributing
-
-- **💬 [Join the Discussions](https://LOCAL///discussions)**: Share your insights, provide feedback, or ask questions.
-- **🐛 [Report Issues](https://LOCAL///issues)**: Submit bugs found or log feature requests for the `` project.
-- **💡 [Submit Pull Requests](https://LOCAL///blob/main/CONTRIBUTING.md)**: Review open PRs, and submit your own PRs.
-
-<details closed>
-<summary>Contributing Guidelines</summary>
-
-1. **Fork the Repository**: Start by forking the project repository to your LOCAL account.
-2. **Clone Locally**: Clone the forked repository to your local machine using a git client.
-   ```sh
-   git clone .
-   ```
-3. **Create a New Branch**: Always work on a new branch, giving it a descriptive name.
-   ```sh
-   git checkout -b new-feature-x
-   ```
-4. **Make Your Changes**: Develop and test your changes locally.
-5. **Commit Your Changes**: Commit with a clear message describing your updates.
-   ```sh
-   git commit -m 'Implemented new feature x.'
-   ```
-6. **Push to LOCAL**: Push the changes to your forked repository.
-   ```sh
-   git push origin new-feature-x
-   ```
-7. **Submit a Pull Request**: Create a PR against the original project repository. Clearly describe the changes and their motivations.
-8. **Review**: Once your PR is reviewed and approved, it will be merged into the main branch. Congratulations on your contribution!
 </details>
 
 <details closed>
@@ -2509,7 +2422,7 @@ echo 'INSERT-TEST-COMMAND-HERE'
 
 ---
 
-## ✨ Acknowledgments
+## ✨ Contributing
 
 - Credit `contributors`, `inspiration`, `references`, etc.
 
