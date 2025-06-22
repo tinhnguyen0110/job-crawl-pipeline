@@ -11,62 +11,79 @@ from sqlalchemy import Table, Column, Integer, String, DateTime
 from .database import JOBS_TABLE, PROCESSED_JOBS_TABLE
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 import time
+from airflow.hooks.base import BaseHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 logger = logging.getLogger(__name__)
 
 # ---------------------- PROMPT TEMPLATES ----------------------
 PROMPT_TITLE = """
-Task: From the job title string, extract:
-1. job_title: The name of the job, excluding any seniority level or location/country prefix (like VN, SG, US, etc.).
-2. seniority: One of the following levels if present: Intern, Fresher, Junior, Middle, Senior, Lead, Manager, Head, Principal, Director, Chief. Leave empty if no level is found.
+You are given a job title in either English or Vietnamese.
 
-Respond in JSON format like:
+Extract the following:
+
+1. "job_title": The main job title, excluding any location or country code prefix (e.g., "VN", "US", "SG").
+
+2. "seniority": Based on your understanding, infer the most likely seniority level (such as Intern, Junior, Mid-level, Senior, Lead, Manager, Head, Director, etc.). If unclear, leave it empty.
+
+You may infer synonyms (e.g., "Associate" = Junior, "Mid-level" = Middle, "Staff" = Senior).
+
+Keep the original language in "job_title".
+
+Respond only in JSON format:
+
 {{"job_title": "...", "seniority": "..."}}
 
-Now, analyze the following title:
+Now analyze this title:
+
 Input: {title}
 """
 
 PROMPT_DESCRIPTION = """
-Extract the following information from this job description:
+You are an AI specializing in parsing information from job postings.
+Your task is to extract structured data fields from the job description text below.
 
-- location
-- salary
-- job_description (short summary)
-- job_requirements
-- benefits
+### FIELD DEFINITIONS
+- **location:** The workplace location.
+- **salary:** The salary range (e.g., "Up to 2000 USD", "Negotiable").
+- **job_description:** Describes the tasks and responsibilities the candidate will perform. Often found under headers like "Job Description", "Your Responsibilities".
+- **job_requirements:** The skills, experience, and qualifications the candidate must have. Often found under headers like "Job Requirements", "Your Skills and Experience", "Qualifications".
+- **benefits:** The perks and benefits the company offers. Often found under headers like "Benefits", "Perks", "Why you'll love working here".
 
-If any field is missing, leave it empty. Respond in JSON format like:
-{{
-  "location": "...",
-  "salary": "...",
-  "job_description": "...",
-  "job_requirements": "...",
-  "benefits": "..."
-}}
+### FORMATTING RULES
+- Keep all text in its original language; do not translate.
+- Extract text verbatim; do not summarize or rephrase.
+- For `job_description`, `job_requirements`, and `benefits`: If there are multiple points, join them with a newline character (`\\n`). Remove any leading bullet symbols (e.g., '-', '*', '+').
+- If information for any field is not found, return an empty string `""`.
+- Respond only with a single, valid JSON object.
 
-Description:
+### TEXT TO PARSE
 {description}
 """
+# Endpoint giờ đây là DNS nội bộ của Kubernetes
+# Dạng: http://<tên-service>.<tên-namespace>.svc.cluster.local:<port>/<path>
+LITELLM_ENDPOINT = "http://litellm-service.platform-services:4000/chat/completions"
+LITELLM_API_KEY = Variable.get("litellm-api-key", default_var="your_api_key_here")
+VALID_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-1.5-pro-latest","gpt-4.1-nano","gpt-4.1-mini"]
+if not LITELLM_API_KEY or LITELLM_API_KEY == "your_api_key_here":
+    logger.warning("[LiteLLM] API key is missing or default is being used.")
+
+
+# ---------------------- UTILITY FUNCTIONS ----------------------
 
 def _call_litellm(prompt,model) -> dict:
     """
     Hàm gửi prompt đến LiteLLM Gateway, sử dụng cấu hình hardcode tạm thời.
     """
     try:
-        # THAY ĐỔI CHO GKE 1: Cấu hình hardcode
-        # Endpoint giờ đây là DNS nội bộ của Kubernetes
-        # Dạng: http://<tên-service>.<tên-namespace>.svc.cluster.local:<port>/<path>
-        endpoint = "http://litellm-proxy-deployment.model-serving:4000/chat/completions" # <-- THAY THẾ BẰNG TÊN SERVICE & NAMESPACE CỦA BẠN
-        api_key = "sk-4ok74WVS45vs_f3Bs5_OoQ" # <-- ## TODO: Chuyển vào Airflow Connection sau này
 
-        headers = {"Authorization": f"Bearer {api_key}"}
+        headers = {"Authorization": f"Bearer {LITELLM_API_KEY}"}
         payload = {
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "response_format": {"type": "json_object"}
         }
         
-        response = requests.post(endpoint, headers=headers, json=payload, timeout=120)
+        response = requests.post(LITELLM_ENDPOINT, headers=headers, json=payload, timeout=120)
         response.raise_for_status()
         
         llm_response_text = response.json()['choices'][0]['message']['content']
@@ -78,6 +95,21 @@ def _call_litellm(prompt,model) -> dict:
     except Exception as e:
         logger.error(f"❌ Lỗi không mong muốn trong hàm _call_litellm: {e}")
         raise ValueError(f"API call failed: {e}") from e
+
+def call_with_model_fallback(prompt, primary_model):
+    tried_models = set()
+    models_to_try = [primary_model] + [m for m in VALID_MODELS if m != primary_model]
+
+    for model in models_to_try:
+        if model in tried_models:
+            continue
+        try:
+            return _call_litellm(prompt, model)
+        except Exception as e:
+            tried_models.add(model)
+            continue
+
+    raise RuntimeError("❌ Tất cả các model đều lỗi.")
 
 def _parse_post_date(time_posted, date_crawled_str):
     """Hàm tiện ích để parse ngày, cần chuyển đổi date_crawled_str thành datetime."""
@@ -100,25 +132,29 @@ def process_jobs_and_update_db_callable(**kwargs):
     Hàm chính được Airflow gọi, đã được tái cấu trúc hoàn chỉnh cho GKE.
     """
     params = kwargs.get("params", {})
-    time_get_api = params.get("time_get_api")
-    if not time_get_api:
-        time_get_api = 10 # mặc định 5s gọi 1 lần
+    time_get_api = params.get("time_get_api", 10)  # Mặc định là 10 giây
+    model_name_to_save = params.get("model_name") 
+    
+
+    if model_name_to_save not in VALID_MODELS:
+        logger.warning(f"❌ Model '{model_name_to_save}' không hợp lệ. model mặc định là 'gemini-1.5-flash'")
+        model_name_to_save = "gemini-1.5-flash"
+
     
     logger.info("Bắt đầu tác vụ xử lý dữ liệu thô bằng LLM...")
 
     # --- 1. Thiết lập kết nối Database ---
     ## TODO: Thay thế các giá trị hardcode này bằng Airflow Connection 'postgres_job_db'
-    db_user = "postgres"
-    db_pass = "123456"
-    db_name = "job_db"
-    db_host = "127.0.0.1"
-    db_port = 5432
-
-    db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-    engine = create_engine(db_url)
     
-    model_name_to_save = "gemini-1.5-flash" # TODO: Lấy từ Airflow Variable sau này
-
+    try:
+        hook = PostgresHook(postgres_conn_id="cloud-sql")
+        engine = hook.get_sqlalchemy_engine()
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")  # Simple test query
+            logger.info("[Postgres] Successfully connected to the Postgres database.")
+    except Exception as e:
+        logger.exception(f"[Postgres] Failed to connect to Postgres: {str(e)}")
+    
     processed_count = 0
     
     try:
@@ -141,8 +177,8 @@ def process_jobs_and_update_db_callable(**kwargs):
                 logger.info(f"🔄 Đang xử lý job ID {job_id}: {job['title']}")
                 try:
                     # Gọi LLM để xử lý title và description
-                    title_result = _call_litellm(PROMPT_TITLE.format(title=job['title']), model_name_to_save)
-                    desc_result = _call_litellm(PROMPT_DESCRIPTION.format(description=job['description']), model_name_to_save)
+                    title_result = call_with_model_fallback(PROMPT_TITLE.format(title=job['title']), model_name_to_save)
+                    desc_result = call_with_model_fallback(PROMPT_DESCRIPTION.format(description=job['description']), model_name_to_save)
                     # Tính toán ngày đăng
                     post_date = _parse_post_date(job['time_posted'], job['crawled_at'])
 

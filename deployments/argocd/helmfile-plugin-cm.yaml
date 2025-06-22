@@ -1,0 +1,22 @@
+# argocd/helmfile-plugin-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Thêm khóa configManagementPlugins
+  configManagementPlugins: |
+    - name: helmfile
+      # Lệnh khởi tạo: chạy trước khi render, dùng để chuẩn bị môi trường
+      # Ở đây chúng ta dùng `helmfile repos` để đảm bảo các repo được đồng bộ.
+      init:
+        command: ["sh", "-c"]
+        args: ["helmfile repos"]
+      # Lệnh render: đây là lệnh chính để tạo ra các file manifest YAML cuối cùng
+      generate:
+        command: ["sh", "-c"]
+        args: ["helmfile template --include-crds"]

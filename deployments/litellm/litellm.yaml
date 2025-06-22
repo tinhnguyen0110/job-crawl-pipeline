@@ -16,3 +16,11 @@ proxy_config:
       api_key: os.environ/GOOGLE_API_KEY
       model: gemini/gemini-2.0-flash-lite
     model_name: gemini-2.0-flash-lite
+  - litellm_params:
+      api_key: os.environ/OPENAI_API_KEY
+      model: openai/gpt-4.1-nano
+    model_name: gpt-4.1-nano
+  - litellm_params:
+      api_key: os.environ/OPENAI_API_KEY
+      model: openai/gpt-4.1-mini
+    model_name: gpt-4.1-mini

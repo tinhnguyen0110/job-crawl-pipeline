@@ -1,0 +1,23 @@
+# argocd-manifests/root-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- Nhớ thay
+    targetRevision: main
+    # Quan trọng: Trỏ tới thư mục chứa các file manifest của ứng dụng con
+    path: argocd-manifests/apps
+  destination:
+    server: 'https://kubernetes.default.svc'
+    # Đích của Root App là chính namespace argocd
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

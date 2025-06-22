@@ -5,12 +5,41 @@ variable "litellm_master_key" {
   default     = "sk-1234"
 }
 
+variable "litellm_ui_username" {
+  description = "Username for LiteLLM UI"
+  type        = string
+}
+
+variable "litellm_ui_password" {
+  description = "Password for LiteLLM UI"
+  type        = string
+  sensitive   = true 
+}
+
 variable "google_api_key" {
   description = "key for Google API"
   type        = string
   sensitive   = true 
-  default     = ""
 }
+
+variable "openai_api_key" {
+  description = "key for OpenAI API"
+  type        = string
+  sensitive   = true 
+}
+
+variable "airflow_connections_cloud_sql" {
+  description = "Connection string for Airflow to connect to Cloud SQL"
+  type        = string
+  sensitive   = true
+}
+
+variable "airflow_variables_litellm_api_key" {
+  description = "API key for LiteLLM to be used in Airflow variables"
+  type        = string
+  sensitive   = true
+}
+
 
 variable "project_id" {
   description = "The GCP project ID to deploy to."

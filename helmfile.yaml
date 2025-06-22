@@ -5,11 +5,29 @@ environments:
     - ./environments/development.yaml
 
 repositories:
+  - name: argocd
+    url: https://argoproj.github.io/argo-helm
   - name: apache-airflow
     url: https://airflow.apache.org
+  # - name: prometheus-community
+  #   url: https://prometheus-community.github.io/helm-charts
 ---
 # Danh sách các Helm Release cần triển khai
 releases:
+  - name: argocd
+    namespace: argocd
+    chart: argo/argo-cd
+    version: "7.3.6" # Luôn chỉ định một phiên bản chart cụ thể
+    installed: true
+    values:
+      - ./deployments/argocd/argocd-values.yaml
+  # - name: prometheus-stack
+  #   namespace: monitoring
+  #   chart: prometheus-community/kube-prometheus-stack
+  #   version: "58.1.0"
+  #   values:
+  #     - ./deployments/monitoring/prometheus-values.yaml
+
     # Release 1: Airflow
   - name: airflow-system
     namespace: airflow
@@ -28,6 +46,11 @@ releases:
   - name: app-services          # Tên Helm release
     namespace: application      # Namespace đích
     chart: ./deployments/application # Đường dẫn đến chart
+    needs:
+      - argocd/argocd 
+      # - monitoring/prometheus-stack
+        # Phụ thuộc vào Airflow
+
 
 
 

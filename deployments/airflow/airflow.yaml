@@ -6,6 +6,12 @@ images:
     # repository: apache/airflow
     tag: latest
     pullPolicy: Always
+ 
+extraEnv: |-
+  - name: AIRFLOW__SECRETS__BACKEND
+    value: airflow.providers.google.cloud.secrets.secret_manager.CloudSecretManagerBackend
+  - name: AIRFLOW__SECRETS__BACKEND_KWARGS
+    value: '{"project_id": "alpine-figure-461007-i9", "connections_prefix": "airflow-connections", "variables_prefix": "airflow-variables"}'
 
 serviceAccount:
   create: false
@@ -23,7 +29,7 @@ webserver:
   startupProbe:
     failureThreshold: 30        # Tăng số lần thử
     periodSeconds: 10           # Cách nhau 10 giây
-    initialDelaySeconds: 30     # Đợi 30s rồi mới bắt đầu probe
+    initialDelaySeconds: 60     # Đợi 30s rồi mới bắt đầu probe
     timeoutSeconds: 5           # Timeout mỗi lần thử
   livenessProbe:
     initialDelaySeconds: 60
@@ -47,7 +53,7 @@ dags:
   gitSync:
     enabled: true
     repo: git@github.com:tinhnguyen0110/job-crawl-pipeline.git
-    branch: deploy_gke
+    branch: main
     subPath: airflow/dags  # thư mục chứa DAGs trong repo
     depth: 1
     wait: 10
@@ -60,7 +66,7 @@ logs:
 
 config:
   kubernetes:
-    delete_worker_pods: "False"
+    delete_worker_pods: "True"
   logging:
     remote_logging: "True"
     remote_base_log_folder: "gs://airflow-logs-tinhnv-gke/logs"
@@ -86,5 +92,5 @@ workers:
       securityContext:
         runAsNonRoot: true
 
-
+    
 

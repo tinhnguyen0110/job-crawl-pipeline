@@ -1,0 +1,48 @@
+# argocd-manifests/apps/prometheus-stack.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Tên của ứng dụng trong ArgoCD
+  name: prometheus-stack
+  # Tất cả các tài nguyên Application của ArgoCD nên nằm trong namespace 'argocd'
+  namespace: argocd
+  # Dùng finalizer để đảm bảo khi xóa App này, các tài nguyên con cũng được dọn dẹp
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Trỏ tới dự án "default" của ArgoCD
+  project: default
+  
+  # Nguồn (Source): Lấy code từ đâu và render như thế nào
+  source:
+    # URL của Git repo dự án của bạn
+    repoURL: 'https://github.com/your-username/your-repo.git'
+    # Nhánh (branch) cần theo dõi
+    targetRevision: main # hoặc develop, tùy vào nhánh bạn làm việc
+    # Đường dẫn tới thư mục gốc của dự án, nơi có file helmfile.yaml
+    path: '.'
+    # Quan trọng: Chỉ cho ArgoCD dùng plugin "helmfile" mà chúng ta đã cấu hình!
+    plugin:
+      name: helmfile
+      # Chúng ta có thể truyền biến môi trường vào plugin nếu cần
+      # env:
+      #   - name: HELMFILE_ENVIRONMENT
+      #     value: development
+
+  # Đích (Destination): Triển khai vào đâu
+  destination:
+    # Cluster hiện tại nơi ArgoCD đang chạy
+    server: 'https://kubernetes.default.svc'
+    # Namespace đích cho release này
+    namespace: monitoring
+  
+  # Chính sách đồng bộ (Sync Policy)
+  syncPolicy:
+    automated:
+      # Tự động xóa các tài nguyên không còn được định nghĩa trong Git
+      prune: true
+      # Tự động sửa lỗi "drift" nếu có ai đó thay đổi thủ công trên cluster
+      selfHeal: true
+    # Tự động tạo namespace đích nếu nó chưa tồn tại
+    syncOptions:
+      - CreateNamespace=true

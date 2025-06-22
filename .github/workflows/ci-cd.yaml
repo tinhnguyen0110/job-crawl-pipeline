@@ -166,7 +166,7 @@ jobs:
       contents: 'read'
       id-token: 'write' # << Quyền quan trọng nhất để lấy OIDC token
     # Sửa lại logic này để map đúng tên môi trường
-    environment: ${{ (github.ref == 'refs/heads/main' && 'production') || (github.ref == 'refs/heads/deploy_gke' && 'development') }}
+    environment: ${{ (github.ref == 'refs/heads/main' && 'development') || (github.ref == 'refs/heads/deploy_gke' && 'development') }}
 
     steps:
       - name: Checkout repository
@@ -200,7 +200,7 @@ jobs:
         id: environment
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "env_name=production" >> $GITHUB_OUTPUT
+            echo "env_name=development" >> $GITHUB_OUTPUT
           else
             echo "env_name=development" >> $GITHUB_OUTPUT
           fi

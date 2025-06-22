@@ -170,6 +170,20 @@ resource "google_secret_manager_secret_iam_member" "airflow_fernet_key_accessor"
   member    = "serviceAccount:${google_service_account.airflow_sa.email}"
 }
 
+resource "google_secret_manager_secret_iam_member" "airflow_variables_litellm_api_key_accessor" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.airflow_variables_litellm_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.airflow_sa.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "airflow_connections_cloud_sql_accessor" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.airflow_connections_cloud_sql.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.airflow_sa.email}"
+}
+
 # Cấp quyền Cloud SQL Client cho GSA của ứng dụng
 resource "google_project_iam_member" "airflow_sa_cloudsql_client" {
   project = var.project_id
@@ -219,6 +233,13 @@ resource "google_secret_manager_secret_iam_member" "litellm_api_key_accessor" {
 resource "google_secret_manager_secret_iam_member" "litellm_ui_credentials_accessor" {
   project   = var.project_id
   secret_id = google_secret_manager_secret.litellm_ui_credentials.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.litellm_sa.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "litellm_master_key_accessor" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.litellm_master_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.litellm_sa.email}"
 }

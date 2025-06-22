@@ -1,7 +1,7 @@
 # environments/development.yaml
 releases:
+  - name: argocd
   # === Ghi đè cho release `app-services` ===
-  - name: app-services
   #   values:
   #     # Sử dụng key `application-umbrella` vì đó là tên chart trong `charts/`
   #     # nếu không, bạn cần dùng alias trong helmfile.yaml
@@ -49,3 +49,56 @@ releases:
         extraEnvFrom:
           - secretRef:
               name: litellm-secrets
+  # === Ghi đè cho release `prometheus-stack` ===
+# monitoring/development.yaml
+# Chứa các cấu hình GHI ĐÈ, chỉ dành cho môi trường DEVELOPMENT.
+# Thường liên quan đến tài nguyên, dung lượng, và Ingress.
+  - name: prometheus-stack
+    values:
+      # -- Ghi đè cấu hình Grafana cho DEV --
+      - grafana:
+          # Cấu hình tài nguyên thấp cho DEV
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          
+          # Dung lượng lưu trữ thấp cho DEV
+          persistence:
+            size: 5Gi
+          
+          # Không bật Ingress cho Grafana trong môi trường DEV
+          ingress:
+            enabled: false
+
+        # -- Ghi đè cấu hình Prometheus cho DEV --
+      - prometheus:
+          prometheusSpec:
+            # Chạy 1 replica cho DEV là đủ
+            replicas: 1
+            
+            # Thời gian lưu trữ metrics ngắn cho DEV để tiết kiệm dung lượng
+            retention: 7d
+
+            # Cấu hình tài nguyên thấp cho DEV
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 500m
+                memory: 1Gi
+                
+            # Dung lượng lưu trữ thấp cho DEV
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 20Gi # Ghi đè lại dung lượng ở đây
+  - name: app-services
+
+

@@ -18,6 +18,7 @@ with DAG(
     max_active_runs=1, # Đảm bảo chỉ có 1 lần chạy xử lý tại một thời điểm
     params={
         "time_get_api": 0,
+        "model_name": "gpt-4.1-nano"
     },
     tags=['processing', 'llm']
 ) as dag:

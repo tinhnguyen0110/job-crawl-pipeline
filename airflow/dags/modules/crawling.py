@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from datetime import datetime
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PlaywrightTimeoutError
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -191,17 +192,16 @@ def load_raw_json_to_sql_callable(**kwargs):
         return
 
     data_to_load = _read_data_from_path(file_path=input_file_path)
-        
-    db_user = os.environ.get("DB_USER", "postgres")
-    db_pass = os.environ.get("DB_PASS", "123456")
-    db_name = os.environ.get("DB_NAME", "job_db")
-    db_host = os.environ.get("DB_HOST", "127.0.0.1")
-    db_port = os.environ.get("DB_PORT", "5432")
-    db_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-    engine = create_engine(db_url)
     
+    try:
+        hook = PostgresHook(postgres_conn_id="cloud-sql")
+        engine = hook.get_sqlalchemy_engine()
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")  # Simple test query
+            logger.info("[Postgres] Successfully connected to the Postgres database.")
+    except Exception as e:
+        logger.exception(f"[Postgres] Failed to connect to Postgres: {str(e)}")
 
-    
     if not data_to_load:
         logger.info("File dữ liệu rỗng.")
         return

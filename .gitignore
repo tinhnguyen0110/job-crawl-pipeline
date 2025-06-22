@@ -46,6 +46,6 @@ temp/
 .vscode/
 .history/
 
-.trigger*
+# .trigger*
 *.pub*
 replacements.txt

@@ -99,7 +99,7 @@ Detailed architecture, setup instructions, and deployment configurations can be 
     │   ├── application
     │   ├── external-secrets
     │   ├── litellm
-    │   └── mainfests
+    │   └── manifests
     ├── docs
     ├── environments
     │   ├── development.yaml
@@ -119,6 +119,7 @@ Detailed architecture, setup instructions, and deployment configurations can be 
         ├── provider.tf
         ├── variables.tf
         └── versions.tf
+	
 ```
 
 ### 🟣 Project Index
@@ -1807,12 +1808,12 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 					</details>
 				</blockquote>
 			</details>
-			<!-- mainfests Submodule -->
+			<!-- manifests Submodule -->
 			<details>
-				<summary><b>mainfests</b></summary>
+				<summary><b>manifests</b></summary>
 				<blockquote>
 					<div class='directory-path' style='padding: 8px 0; color: #666;'>
-						<code><b>⦿ deployments.mainfests</b></code>
+						<code><b>⦿ deployments.manifests</b></code>
 					<table style='width: 100%; border-collapse: collapse;'>
 					<thead>
 						<tr style='background-color: #f8f9fa;'>
@@ -1821,15 +1822,15 @@ Detailed architecture, setup instructions, and deployment configurations can be 
 						</tr>
 					</thead>
 						<tr style='border-bottom: 1px solid #eee;'>
-							<td style='padding: 8px;'><b><a href='/deployments/mainfests/airflow-secret.yaml'>airflow-secret.yaml</a></b></td>
+							<td style='padding: 8px;'><b><a href='/deployments/manifests/airflow-secret.yaml'>airflow-secret.yaml</a></b></td>
 							<td style='padding: 8px;'>- Facilitates the synchronization of secrets from Google Cloud Platforms Secret Manager to Kubernetes for the Airflow deployment<br>- It defines external secrets, specifying how they should be retrieved and stored within the Kubernetes namespace<br>- This ensures that sensitive information, such as SSH keys and fernet keys, are securely managed and accessible to the Airflow system, enhancing both security and operational efficiency.</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
-							<td style='padding: 8px;'><b><a href='/deployments/mainfests/cluster-secret.yaml'>cluster-secret.yaml</a></b></td>
+							<td style='padding: 8px;'><b><a href='/deployments/manifests/cluster-secret.yaml'>cluster-secret.yaml</a></b></td>
 							<td style='padding: 8px;'>- Facilitates the integration of Google Cloud Platforms Secret Manager with Kubernetes by defining a ClusterSecretStore<br>- Utilizes workload identity for authentication, allowing seamless access to secrets stored in GCP<br>- Supports centralized management of secrets across the Kubernetes cluster, enhancing security and simplifying secret management within the specified cluster and namespace, aligning with the projects broader aim of secure and efficient resource management.</td>
 						</tr>
 						<tr style='border-bottom: 1px solid #eee;'>
-							<td style='padding: 8px;'><b><a href='/deployments/mainfests/litellm-secret.yaml'>litellm-secret.yaml</a></b></td>
+							<td style='padding: 8px;'><b><a href='/deployments/manifests/litellm-secret.yaml'>litellm-secret.yaml</a></b></td>
 							<td style='padding: 8px;'>- Facilitates secure management of sensitive information by defining an ExternalSecret for the platform-services namespace<br>- It references a GCP secret store to fetch and synchronize critical data such as API keys and UI credentials into Kubernetes secrets<br>- This setup ensures that application components can access necessary credentials without hardcoding them, enhancing security and maintainability across the projects deployment architecture.</td>
 						</tr>
 					</table>
@@ -2455,6 +2456,8 @@ The Continuous Integration (CI) job (`build-and-push`) is highly optimized:
 The Continuous Deployment (CD) job (`deploy`) brings the new code to life:
 * **Dynamic Tag Injection:** After a successful build, the `deploy` job is triggered. It receives the new image tags (prefixed with `g-` and the Git commit SHA) from the build job.
 * **Declarative Deployment:** The job executes `helmfile apply`, using `--set` arguments to dynamically override the `image.tag` for only the services that were rebuilt. Helmfile then reconciles the desired state with the cluster, and Kubernetes performs a safe, zero-downtime rolling update for the affected applications.
+
+## 5. 📡 Observability
 
 ## ⬛ License
 

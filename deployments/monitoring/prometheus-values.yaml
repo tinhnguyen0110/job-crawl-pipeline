@@ -1,0 +1,42 @@
+# monitoring/prometheus-values.yaml
+# Chứa các cấu hình CỐT LÕI, áp dụng cho TẤT CẢ các môi trường.
+
+# -- Cấu hình chung --
+# Bật/tắt các thành phần chính của stack
+grafana:
+  enabled: true
+prometheus:
+  enabled: true
+alertmanager:
+  enabled: true
+
+# -- Cấu hình Grafana --
+grafana:
+  # Sử dụng secret đã tạo để quản lý mật khẩu admin.
+  # Cách làm này là cố định cho mọi môi trường.
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: user
+    passwordKey: password
+  
+  # Quyết định bật tính năng lưu trữ dữ liệu cho Grafana (dashboards, users...).
+  # Dung lượng cụ thể sẽ do file môi trường quyết định.
+  persistence:
+    enabled: true
+    type: pvc
+    accessModes:
+      - ReadWriteOnce
+
+# -- Cấu hình Prometheus --
+prometheus:
+  prometheusSpec:
+    # Hành vi cốt lõi: Cho phép Prometheus khám phá TẤT CẢ ServiceMonitor trong cluster.
+    # Cấu hình này nên nhất quán ở mọi môi trường.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    # Quyết định bật tính năng lưu trữ cho Prometheus.
+    # Dung lượng cụ thể sẽ do file môi trường quyết định.
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          # Không cần định nghĩa storage ở đây, file môi trường sẽ ghi đè.

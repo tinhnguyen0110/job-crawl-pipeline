@@ -1,23 +1,18 @@
-#!/bin/bash
-set -e
+# Makefile for triggering CI/CD by creating .trigger-* files
 
-# Danh sách component cần trigger (mặc định là cả 3)
-components=("$@")
-if [ ${#components[@]} -eq 0 ]; then
-  components=("backend" "frontend" "airflow")
-fi
+.PHONY: all backend frontend airflow
 
-echo "⚙️  Creating trigger files for CI/CD..."
-created_files=()
+TRIGGER_SCRIPT=./trigger.sh
 
-for comp in "${components[@]}"; do
-  file=".trigger-$comp"
-  echo "⏳ Triggering $comp..."
-  date > "$file"
-  created_files+=("$file")
-done
-git add .
-git commit -m "ci: trigger build for ${components[*]}"
-git push origin deploy_gke
+# Default: trigger all components
+all:
+	$(TRIGGER_SCRIPT)
 
-echo "✅ CI/CD triggered via: ${created_files[*]}"
+backend:
+	$(TRIGGER_SCRIPT) backend
+
+frontend:
+	$(TRIGGER_SCRIPT) frontend
+
+airflow:
+	$(TRIGGER_SCRIPT) airflow
