@@ -7,8 +7,8 @@ environments:
 repositories:
   - name: argocd
     url: https://argoproj.github.io/argo-helm
-  - name: apache-airflow
-    url: https://airflow.apache.org
+  # - name: apache-airflow
+  #   url: https://airflow.apache.org
   # - name: prometheus-community
   #   url: https://prometheus-community.github.io/helm-charts
 ---
@@ -16,11 +16,17 @@ repositories:
 releases:
   - name: argocd
     namespace: argocd
-    chart: argo/argo-cd
+    chart: argocd/argo-cd
     version: "7.3.6" # Luôn chỉ định một phiên bản chart cụ thể
-    installed: true
     values:
       - ./deployments/argocd/argocd-values.yaml
+
+  - name: app-services          # Tên Helm release
+    namespace: application      # Namespace đích
+    chart: ./deployments/application # Đường dẫn đến chart
+    needs:
+    - argocd/argocd # Phụ thuộc vào ArgoCD
+
   # - name: prometheus-stack
   #   namespace: monitoring
   #   chart: prometheus-community/kube-prometheus-stack
@@ -29,25 +35,21 @@ releases:
   #     - ./deployments/monitoring/prometheus-values.yaml
 
     # Release 1: Airflow
-  - name: airflow-system
-    namespace: airflow
-    chart: apache-airflow/airflow
-    version: 1.16.0
-    values:
-      - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
-    # Release 2: Litellm Service
-  - name: litellm-service         # Tên Helm release
-    namespace: platform-services      # Namespace đích
-    chart: ./deployments/litellm # Đường dẫn đến chart
-    values:
-      - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
+  # - name: airflow-system
+  #   namespace: airflow
+  #   chart: apache-airflow/airflow
+  #   version: 1.16.0
+  #   values:
+  #     - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
+  #   # Release 2: Litellm Service
+  # - name: litellm-service         # Tên Helm release
+  #   namespace: platform-services      # Namespace đích
+  #   chart: ./deployments/litellm # Đường dẫn đến chart
+  #   values:
+  #     - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
 
   # Release 3: Application (frontend, backend)
-  - name: app-services          # Tên Helm release
-    namespace: application      # Namespace đích
-    chart: ./deployments/application # Đường dẫn đến chart
-    needs:
-      - argocd/argocd 
+
       # - monitoring/prometheus-stack
         # Phụ thuộc vào Airflow
 

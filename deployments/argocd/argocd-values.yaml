@@ -1,40 +1,51 @@
 # argocd/argocd-values.yaml
-
-server:
-  ingress:
-    enabled: false
-
-# SỬ DỤNG KHỐI CẤU HÌNH ĐÚNG DƯỚI ĐÂY
 repoServer:
-  # Phần volumes, volumeMounts và initContainers giữ nguyên như cũ
   volumes:
     - name: custom-tools
       emptyDir: {}
+    - name: cmp-helmfile-plugin
+      configMap:
+        name: cmp-helmfile-plugin
+
   volumeMounts:
     - name: custom-tools
       mountPath: /usr/local/bin/custom-tools
+
   initContainers:
     - name: download-tools
       image: alpine:3.18
-      command:
-        - sh
-        - -c
-        - |
-          wget https://get.helm.sh/helm-v3.15.2-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /custom-tools/helm
-          wget https://github.com/helmfile/helmfile/releases/download/v0.165.0/helmfile_0.165.0_linux_amd64.tar.gz -O - | tar -xzO helmfile > /custom-tools/helmfile
-          chmod +x /custom-tools/helm
-          chmod +x /custom-tools/helmfile
-          ln -s /custom-tools/helm /usr/local/bin/helm
-          ln -s /custom-tools/helmfile /usr/local/bin/helmfile
+      # command: ["sh", "-c", "wget https://get.helm.sh/helm-v3.15.2-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /custom-tools/helm && wget https://github.com/helmfile/helmfile/releases/download/v0.165.0/helmfile_0.165.0_linux_amd64.tar.gz -O - | tar -xzO helmfile > /custom-tools/helmfile && chmod +x /custom-tools/helm /custom-tools/helmfile && ln -s /custom-tools/helm /usr/local/bin/helm && ln -s /custom-tools/helmfile /usr/local/bin/helmfile"]
+      command: ["sh", "-c", "wget https://get.helm.sh/helm-v3.15.2-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /custom-tools/helm && wget https://github.com/helmfile/helmfile/releases/download/v0.165.0/helmfile_0.165.0_linux_amd64.tar.gz -O - | tar -xzO helmfile > /custom-tools/helmfile && chmod +x /custom-tools/helm /custom-tools/helmfile"]
+
       volumeMounts:
         - name: custom-tools
           mountPath: /custom-tools
 
-  # --- PHẦN SỬA LỖI ---
-  # Xóa bỏ khối `extraContainers` không chính xác.
-  # Thay thế bằng cách sử dụng `env` để thêm biến môi trường
-  # trực tiếp vào container chính của repo-server.
   env:
     - name: PATH
-      # Giá trị PATH mặc định của container cộng thêm đường dẫn tới các công cụ của chúng ta
       value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin/custom-tools
+
+  extraContainers:
+    - name: cmp-helmfile
+      image: quay.io/argoproj/argocd:v2.11.7
+      command: [/var/run/argocd/argocd-cmp-server]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      volumeMounts:
+        - name: var-files
+          mountPath: /var/run/argocd
+        - name: cmp-helmfile-plugin
+          mountPath: /home/argocd/cmp-server/config # <-- ĐỊA CHỈ ĐÚNG
+        - name: custom-tools
+          mountPath: /usr/local/bin/custom-tools
+        - name: plugins
+          mountPath: /home/argocd/cmp-server/plugins
+      env:
+        - name: PATH
+          value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin/custom-tools
+
+
+server:
+  ingress:
+    enabled: false

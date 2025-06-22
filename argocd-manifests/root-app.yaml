@@ -4,18 +4,26 @@ kind: Application
 metadata:
   name: root-app-of-apps
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
+  # ==========================================================
+  # PHẦN SỬA LỖI
+  # ==========================================================
   source:
-    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- Nhớ thay
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- NHỚ THAY BẰNG URL GIT REPO CỦA BẠN
     targetRevision: main
-    # Quan trọng: Trỏ tới thư mục chứa các file manifest của ứng dụng con
+    # Path này vẫn đúng, đây là nơi chứa các file manifest của app con
     path: argocd-manifests/apps
+    
+    # Thêm vào đây để chỉ định rõ đây là loại "directory"
+    # và xóa bỏ hoàn toàn khối "plugin"
+    directory:
+      # Tùy chọn này cho phép đọc cả các thư mục con nếu có
+      recurse: true 
+  # ==========================================================
+  
   destination:
     server: 'https://kubernetes.default.svc'
-    # Đích của Root App là chính namespace argocd
     namespace: argocd
   syncPolicy:
     automated:

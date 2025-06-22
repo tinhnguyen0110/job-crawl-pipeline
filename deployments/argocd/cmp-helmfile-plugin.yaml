@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cmp-helmfile-plugin
+  namespace: argocd
+data:
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: helmfile
+    spec:
+      discover:
+        find:
+          command: ["sh", "-c", "echo '[🔍] Discovering helmfile...'; find . -maxdepth 2 -name 'helmfile.yaml'"]
+      init:
+        command: ["helmfile", "repos"]
+      generate:
+        command: ["helmfile", "template", "--include-crds"]
