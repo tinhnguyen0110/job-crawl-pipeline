@@ -24,3 +24,25 @@ proxy_config:
       api_key: os.environ/OPENAI_API_KEY
       model: openai/gpt-4.1-mini
     model_name: gpt-4.1-mini
+
+postgresql:
+  enabled: false
+db:
+  useExisting: true
+
+  # Tên service của PostgreSQL được tạo bởi chart Bitnami ở trên
+  # Định dạng: <tên-app-argo>-<tên-chart>-headless.<namespace>.svc.cluster.local
+  endpoint: "postgresql-shared-postgresql-headless.platform-services.svc.cluster.local"
+
+  database: "litellm_db" # Tên DB đã tạo ở Bước 1
+
+  # Vì chúng ta đang "đi tắt", ta sẽ tạm thời hardcode username/password ở đây
+  # hoặc tạo một Secret thủ công và tham chiếu đến nó.
+  # Để nhanh nhất, chúng ta có thể tạm hardcode trong env của Job hook.
+  # Tuy nhiên, cách tốt hơn là tham chiếu đến Secret mà chart Bitnami tự tạo.
+  secret:
+    # Tên secret mà chart Bitnami postgresql tự tạo ra
+    # Định dạng: <tên-app-argo>-postgresql
+    name: "postgresql-shared-postgresql"
+    usernameKey: "user" # Bitnami chart dùng key 'user' cho username
+    passwordKey: "password" # và 'password' cho password

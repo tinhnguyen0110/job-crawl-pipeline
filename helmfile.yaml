@@ -14,6 +14,11 @@ repositories:
 ---
 # Danh sách các Helm Release cần triển khai
 releases:
+  - name: common-resources
+    namespace: platform-services
+    chart: ./charts/common-resources
+    wave: -1 
+
   - name: argocd
     namespace: argocd
     chart: argocd/argo-cd
@@ -41,12 +46,18 @@ releases:
   #   version: 1.16.0
   #   values:
   #     - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
+  #   needs:
+  #   - argocd/argocd # Phụ thuộc vào ArgoCD
+
   #   # Release 2: Litellm Service
-  # - name: litellm-service         # Tên Helm release
-  #   namespace: platform-services      # Namespace đích
-  #   chart: ./deployments/litellm # Đường dẫn đến chart
-  #   values:
-  #     - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
+  - name: litellm-service         # Tên Helm release
+    namespace: platform-services      # Namespace đích
+    chart: ./deployments/litellm # Đường dẫn đến chart
+    values:
+      - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
+    # needs:
+    # - argocd/argocd # Phụ thuộc vào ArgoCD
+
 
   # Release 3: Application (frontend, backend)
 

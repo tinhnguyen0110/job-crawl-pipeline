@@ -5,8 +5,15 @@ kind: Job
 metadata:
   name: {{ include "litellm.fullname" . }}-migrations
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation # delete old migration on a new deploy in case the migration needs to make updates
+    # XÓA BỎ các annotation của ArgoCD
+    # argocd.argoproj.io/hook: PreSync
+    # argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+
+    # THÊM VÀO các annotation của Helm
+    "helm.sh/hook": pre-install,pre-upgrade  # Chạy hook trước khi install VÀ trước khi upgrade
+    "helm.sh/hook-weight": "-5"               # Ưu tiên chạy hook này trước các hook khác (số nhỏ chạy trước)
+    "helm.sh/hook-delete-policy": before-hook-creation # Tự động xóa hook cũ trước khi tạo hook mới
+    "argocd.argoproj.io/sync-wave": "1"
     checksum/config: {{ toYaml .Values | sha256sum }}
 spec:
   template:
@@ -17,6 +24,22 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ include "litellm.serviceAccountName" . }}
+
+      initContainers:
+        - name: wait-for-postgres
+          # Dùng một image nhẹ có chứa sẵn công cụ client của postgresql
+          image: postgres:15-alpine
+          # Command sẽ chạy một vòng lặp, dùng pg_isready để kiểm tra kết nối
+          # Nó sẽ thử lại sau mỗi 2 giây cho đến khi database sẵn sàng
+          command:
+            - sh
+            - "-c"
+            - |
+              until pg_isready -h {{ .Release.Name }}-postgresql -p 5432 -U {{ .Values.postgresql.auth.username }}; do
+                echo "Waiting for database to be ready 123 ...";
+                sleep 2;
+              done;
+
       containers:
         - name: prisma-migrations
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "main-%s" .Chart.AppVersion) }}"

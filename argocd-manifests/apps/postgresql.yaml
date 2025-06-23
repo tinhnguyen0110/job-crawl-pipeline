@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql-shared
+  namespace: argocd
+  annotations:
+    # Gán vào wave 0, chạy đầu tiên
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: 'https://charts.bitnami.com/bitnami'
+    chart: postgresql
+    targetRevision: '15.5.18' # Chỉ định một phiên bản cụ thể để ổn định
+    helm:
+      values: |
+        auth:
+          # Mật khẩu cho user admin `postgres`
+          postgresPassword: "YourAdminPassword123" # <-- TODO: Chuyển sang Secret sau
+
+          # Tạo sẵn database và user cho LiteLLM
+          database: litellm_db
+          username: litellm_user
+          password: "YourLiteLLMPassword123" # <-- TODO: Chuyển sang Secret sau
+
+        primary:
+          persistence:
+            # Dung lượng nhỏ cho môi trường dev
+            size: 8Gi
+  destination:
+    server: 'https://kubernetes.default.svc'
+    # Triển khai database vào namespace chung cho các dịch vụ nền tảng
+    namespace: platform-services
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

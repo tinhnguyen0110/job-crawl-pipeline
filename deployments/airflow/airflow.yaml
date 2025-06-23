@@ -4,7 +4,7 @@ images:
   airflow:
     repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/airflow
     # repository: apache/airflow
-    tag: latest
+    tag: g-d5b80f5
     pullPolicy: Always
  
 extraEnv: |-
@@ -72,11 +72,11 @@ config:
     remote_base_log_folder: "gs://airflow-logs-tinhnv-gke/logs"
     remote_log_conn_id: "google_cloud_default"
 
-postgresql:
-  enabled: true
-  persistence:
-      accessModes:
-        - ReadWriteOnce
+# postgresql:
+#   enabled: true
+#   persistence:
+#       accessModes:
+#         - ReadWriteOnce
 
 workers:
   serviceAccount:
@@ -92,5 +92,29 @@ workers:
       securityContext:
         runAsNonRoot: true
 
+
+postgresql:
+  enabled: false
+
+# Tắt sub-chart redis
+redis:
+  enabled: false
+
+# Cấu hình để kết nối đến DB và Redis bên ngoài
+externalDatabase:
+  type: postgresql
+  host: postgresql-shared-postgresql-headless.platform-services.svc.cluster.local
+  port: 5432
+  database: airflow_db
+  user: airflow_user
+  passwordSecret: "postgresql-shared-postgresql" # Tên secret do chart Bitnami tạo
+  passwordSecretKey: postgres-password # Dùng user `postgres` hoặc tạo secret riêng
+
+externalRedis:
+  host: redis-shared-master.platform-services.svc.cluster.local
+  port: 6379
+  passwordSecret: "redis-shared" # Tên secret do chart Bitnami tạo
+  passwordSecretKey: redis-password
+  databaseNumber: 0 # Dùng DB 0 cho Airflow
     
 

@@ -1,0 +1,26 @@
+# argocd-manifests/apps/redis.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-shared
+  namespace: argocd
+  annotations:
+    # Cũng ở wave 0, chạy song song với PostgreSQL
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: 'https://charts.bitnami.com/bitnami'
+    chart: redis
+    targetRevision: '19.6.3'
+    helm:
+      values: |
+        auth:
+          enabled: true
+          password: "123456" # <-- Nên dùng secret
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: platform-services
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
