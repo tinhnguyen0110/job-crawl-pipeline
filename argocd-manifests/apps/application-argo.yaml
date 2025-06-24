@@ -5,6 +5,9 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Gán vào wave 0, chạy đầu tiên
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
