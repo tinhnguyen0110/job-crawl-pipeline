@@ -1,24 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: application-argo
+  name: airflow
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    # Gán vào wave 0, chạy đầu tiên
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- Nhớ thay
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git'
     targetRevision: main
-    path: .
+    path: '.'
     plugin:
       name: helmfile
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: application # <-- THAY ĐỔI
+    namespace: airflow
   syncPolicy:
     automated:
       prune: true

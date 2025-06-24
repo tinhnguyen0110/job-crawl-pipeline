@@ -5,58 +5,64 @@ environments:
     - ./environments/development.yaml
 
 repositories:
-  - name: argocd
-    url: https://argoproj.github.io/argo-helm
-  # - name: apache-airflow
-  #   url: https://airflow.apache.org
-  # - name: prometheus-community
-  #   url: https://prometheus-community.github.io/helm-charts
+#   - name: argocd
+#     url: https://argoproj.github.io/argo-helm
+  - name: apache-airflow
+    url: https://airflow.apache.org
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
 ---
 # Danh sách các Helm Release cần triển khai
 releases:
-  - name: common-resources
-    namespace: platform-services
-    chart: ./charts/common-resources
-    wave: -1 
-
-  - name: argocd
-    namespace: argocd
-    chart: argocd/argo-cd
-    version: "7.3.6" # Luôn chỉ định một phiên bản chart cụ thể
-    values:
-      - ./deployments/argocd/argocd-values.yaml
+  # - name: argocd
+  #   namespace: argocd
+  #   chart: argocd/argo-cd
+  #   version: "7.3.6" # Luôn chỉ định một phiên bản chart cụ thể
+  #   values:
+  #     - ./deployments/argocd/argocd-values.yaml
+  #   labels:
+  #     app: argocd
 
   - name: app-services          # Tên Helm release
     namespace: application      # Namespace đích
     chart: ./deployments/application # Đường dẫn đến chart
-    needs:
-    - argocd/argocd # Phụ thuộc vào ArgoCD
+    # needs:
+    # - argocd/argocd # Phụ thuộc vào ArgoCD
+    labels:
+      app: application-argo
 
-  # - name: prometheus-stack
-  #   namespace: monitoring
-  #   chart: prometheus-community/kube-prometheus-stack
-  #   version: "58.1.0"
-  #   values:
-  #     - ./deployments/monitoring/prometheus-values.yaml
+
+  - name: prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: "58.1.0"
+    values:
+      - ./deployments/monitoring/prometheus-values.yaml
+    labels:
+      app: prometheus-stack
 
     # Release 1: Airflow
-  # - name: airflow-system
-  #   namespace: airflow
-  #   chart: apache-airflow/airflow
-  #   version: 1.16.0
-  #   values:
-  #     - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
+  - name: airflow-system
+    namespace: airflow
+    chart: apache-airflow/airflow
+    version: 1.16.0
+    values:
+      - ./deployments/airflow/airflow.yaml # Sử dụng cấu hình chung cho Airflow
+    labels:
+      app: airflow
   #   needs:
   #   - argocd/argocd # Phụ thuộc vào ArgoCD
 
   #   # Release 2: Litellm Service
   - name: litellm-service         # Tên Helm release
     namespace: platform-services      # Namespace đích
+    labels:
+      app: litellm-service
     chart: ./deployments/litellm # Đường dẫn đến chart
     values:
       - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
-    # needs:
-    # - argocd/argocd # Phụ thuộc vào ArgoCD
+  #   needs:
+  #   - argocd/argocd # Phụ thuộc vào ArgoCD
 
 
   # Release 3: Application (frontend, backend)

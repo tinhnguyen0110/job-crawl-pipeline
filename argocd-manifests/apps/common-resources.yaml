@@ -1,0 +1,26 @@
+# argocd-manifests/apps/common-resources.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: common-resources
+  namespace: argocd
+  annotations:
+    # Wave -1 đảm bảo nó chạy trước cả Wave 0 của database
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- URL Repo của bạn
+    targetRevision: main
+    # Trỏ đến thư mục chứa các file YAML Secret
+    path: deployments/common
+    directory:
+      # Tùy chọn này cho phép đọc cả các thư mục con nếu có
+      recurse: true 
+  destination:
+    server: 'https://kubernetes.default.svc'
+    # Namespace nơi các secret sẽ được tạo
+    namespace: platform-services 
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

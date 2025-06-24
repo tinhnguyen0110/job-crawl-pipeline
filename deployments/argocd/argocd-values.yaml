@@ -45,42 +45,31 @@ repoServer:
         - name: PATH
           value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin/custom-tools
 
-
-# argocd/argocd-values.yaml
-
-# ... (Phần `configs` và `repoServer` giữ nguyên) ...
-
-# ===================================================================
-# PHẦN SERVER - CẤU HÌNH INGRESS HOÀN CHỈNH
-# ===================================================================
 server:
-  # ===================================================================
-  # PHẦN INGRESS ĐƯỢC CẤU HÌNH THEO ĐÚNG CẤU TRÚC CHART
-  # ===================================================================
   ingress:
-    enabled: true
-    controller: generic # Giữ là 'generic' để tương thích tốt nhất
+    enabled: false
+  #   controller: generic # Giữ là 'generic' để tương thích tốt nhất
     
-    # Dùng đúng khóa `hostname`
-    hostname: argocd.34.49.177.9.nip.io # <-- Thay bằng IP Ingress mới nhất của bạn
+  #   # Dùng đúng khóa `hostname`
+  #   hostname: argocd.34.49.177.9.nip.io # <-- Thay bằng IP Ingress mới nhất của bạn
     
-    # Bật TLS bằng cờ boolean
-    tls: true
+  #   # Bật TLS bằng cờ boolean
+  #   tls: true
     
-    # Sử dụng tính năng tích hợp sẵn cho GKE Health Check
-    gke:
-      backendConfig:
-        name: argocd-backend-config
-        enabled: true
-        spec:
-          healthCheck:
-            requestPath: /healthz
-            port: 8080
-            type: HTTPS
+  #   # Sử dụng tính năng tích hợp sẵn cho GKE Health Check
+  #   gke:
+  #     backendConfig:
+  #       name: argocd-backend-config
+  #       enabled: true
+  #       spec:
+  #         healthCheck:
+  #           requestPath: /healthz
+  #           port: 8080
+  #           type: HTTPS
 
-  service:
-    type: ClusterIP
-    ports:
-      - port: 443
-        targetPort: 8080
-        name: https
+  # service:
+  #   type: ClusterIP
+  #   ports:
+  #     - port: 443
+  #       targetPort: 8080
+  #       name: https

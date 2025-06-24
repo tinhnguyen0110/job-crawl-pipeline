@@ -42,7 +42,7 @@ resource "google_container_node_pool" "primary_nodes" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
-    # spot = true # Cân nhắc dùng Spot VMs để tiết kiệm chi phí
+    spot = true # Cân nhắc dùng Spot VMs để tiết kiệm chi phí
   }
 }
 

@@ -34,6 +34,13 @@ webserver:
   livenessProbe:
     initialDelaySeconds: 60
     failureThreshold: 10
+  resources:
+    limits:
+      cpu: "1"       # Giới hạn tối đa 1 core CPU
+      memory: "2Gi"  # Giới hạn tối đa 2 Gigabytes Memory
+    requests:
+      cpu: "500m"    # Yêu cầu ban đầu 0.5 core CPU
+      memory: "1Gi"  # Yêu cầu ban đầu 1 Gigabyte Memory
   
 
 triggerer:
@@ -66,7 +73,7 @@ logs:
 
 config:
   kubernetes:
-    delete_worker_pods: "True"
+    delete_worker_pods: True
   logging:
     remote_logging: "True"
     remote_base_log_folder: "gs://airflow-logs-tinhnv-gke/logs"
@@ -101,20 +108,31 @@ redis:
   enabled: false
 
 # Cấu hình để kết nối đến DB và Redis bên ngoài
-externalDatabase:
-  type: postgresql
-  host: postgresql-shared-postgresql-headless.platform-services.svc.cluster.local
-  port: 5432
-  database: airflow_db
-  user: airflow_user
-  passwordSecret: "postgresql-shared-postgresql" # Tên secret do chart Bitnami tạo
-  passwordSecretKey: postgres-password # Dùng user `postgres` hoặc tạo secret riêng
+data:
+  # Cấu hình kết nối đến Metadata Database (PostgreSQL)
+  metadataConnection:
+    protocol: "postgresql"
+    # User và DB đã được tạo bởi initdbScripts của PostgreSQL
+    user: "airflow_user"
+    db: "airflow_db"
+    # Mật khẩu này phải khớp với mật khẩu bạn đã tạo trong initdbScripts
+    pass: "airflow123" 
+    # Host là service của PostgreSQL dùng chung
+    host: "postgresql-shared-hl.platform-services.svc.cluster.local"
+    port: 5432
 
-externalRedis:
-  host: redis-shared-master.platform-services.svc.cluster.local
-  port: 6379
-  passwordSecret: "redis-shared" # Tên secret do chart Bitnami tạo
-  passwordSecretKey: redis-password
-  databaseNumber: 0 # Dùng DB 0 cho Airflow
+  resultBackendConnection:
+    user: airflow_user
+    pass: "airflow123"
+    protocol: postgresql
+    host: postgresql-shared-hl.platform-services.svc.cluster.local
+    port: 5432
+    db: airflow_db
+    sslmode: disable
+  # Cấu hình kết nối đến Result Backend (cũng là PostgreSQL)
+  # Cấu hình kết nối đến Broker (Redis)
+  # Chúng ta sẽ cung cấp thẳng chuỗi kết nối brokerUrl
+  # Định dạng: redis://:<password>@<host>:<port>/<db_number>
+  brokerUrl: "redis://:YourStrongRedisPassword@redis-shared-master.platform-services.svc.cluster.local:6379/1"
     
 

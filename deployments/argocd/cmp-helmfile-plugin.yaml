@@ -11,9 +11,10 @@ data:
       name: helmfile
     spec:
       discover:
-        find:
+        find: 
           command: ["sh", "-c", "echo '[🔍] Discovering helmfile...'; find . -maxdepth 2 -name 'helmfile.yaml'"]
       init:
         command: ["helmfile", "repos"]
       generate:
-        command: ["helmfile", "template", "--include-crds"]
+        #command: ["helmfile", "template", "--include-crds"]
+        command: ["sh", "-c", "helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds"]

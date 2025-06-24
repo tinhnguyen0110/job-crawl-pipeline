@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: litellm # <-- THAY ĐỔI
+  name: litellm-service # <-- THAY ĐỔI
   namespace: argocd
   annotations:
     # Gán vào wave 0, chạy đầu tiên
@@ -13,8 +13,6 @@ spec:
     targetRevision: main
     path: '.'
     # Quan trọng: Vẫn dùng plugin helmfile vì airflow được quản lý bởi helmfile
-    plugin:
-      name: helmfile
   destination:
     server: 'https://kubernetes.default.svc'
     # Namespace đích cho release này

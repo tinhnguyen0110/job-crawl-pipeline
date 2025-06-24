@@ -1,0 +1,13 @@
+environments:
+  development:
+    values:
+      - ../../environments/development.yaml
+
+releases:
+  - name: app-services
+    namespace: application
+    chart: ../../deployments/application
+    values:
+      - ../../deployments/application/values.yaml
+    labels:
+      app: application-argo

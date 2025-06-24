@@ -27,12 +27,14 @@ proxy_config:
 
 postgresql:
   enabled: false
+
 db:
+  deployStandalone: false
   useExisting: true
 
   # Tên service của PostgreSQL được tạo bởi chart Bitnami ở trên
   # Định dạng: <tên-app-argo>-<tên-chart>-headless.<namespace>.svc.cluster.local
-  endpoint: "postgresql-shared-postgresql-headless.platform-services.svc.cluster.local"
+  endpoint: "postgresql-shared-hl.platform-services.svc.cluster.local"
 
   database: "litellm_db" # Tên DB đã tạo ở Bước 1
 
@@ -43,6 +45,6 @@ db:
   secret:
     # Tên secret mà chart Bitnami postgresql tự tạo ra
     # Định dạng: <tên-app-argo>-postgresql
-    name: "postgresql-shared-postgresql"
-    usernameKey: "user" # Bitnami chart dùng key 'user' cho username
-    passwordKey: "password" # và 'password' cho password
+    name: "platform-database-credentials"
+    usernameKey: "litellm-db-username" # Cần tạo key này trong Secret nếu user khác nhau
+    passwordKey: "litellm-db-password"

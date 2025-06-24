@@ -15,18 +15,31 @@ spec:
     helm:
       values: |
         auth:
-          # Mật khẩu cho user admin `postgres`
-          postgresPassword: "YourAdminPassword123" # <-- TODO: Chuyển sang Secret sau
+          # Vẫn dùng existingSecret để đặt mật khẩu cho user admin `postgres`
+          existingSecret: "platform-database-credentials"
+          secretKeys:
+            adminPasswordKey: "postgres-password"
 
-          # Tạo sẵn database và user cho LiteLLM
-          database: litellm_db
-          username: litellm_user
-          password: "YourLiteLLMPassword123" # <-- TODO: Chuyển sang Secret sau
-
+        # Sử dụng script của bạn để khởi tạo các DB và user khác
         primary:
-          persistence:
-            # Dung lượng nhỏ cho môi trường dev
-            size: 8Gi
+          initdb:
+            scripts:
+              create_dbs.sql: |
+                -- Tạo database
+                CREATE DATABASE litellm_db;
+                CREATE DATABASE airflow_db;
+
+                -- Tạo user
+                CREATE USER litellm_user WITH PASSWORD 'litellm123';
+                CREATE USER airflow_user WITH PASSWORD 'airflow123';
+
+                -- Gán quyền sở hữu (cách làm này bao hàm tất cả các quyền cần thiết)
+                ALTER DATABASE litellm_db OWNER TO litellm_user;
+                ALTER DATABASE airflow_db OWNER TO airflow_user;
+          
+            persistence:
+              # Dung lượng nhỏ cho môi trường dev
+              size: 8Gi
   destination:
     server: 'https://kubernetes.default.svc'
     # Triển khai database vào namespace chung cho các dịch vụ nền tảng

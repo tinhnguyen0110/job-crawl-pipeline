@@ -14,11 +14,11 @@ alertmanager:
 grafana:
   # Sử dụng secret đã tạo để quản lý mật khẩu admin.
   # Cách làm này là cố định cho mọi môi trường.
-  admin:
-    existingSecret: grafana-admin-credentials
-    userKey: user
-    passwordKey: password
-  
+  # admin:
+  #   existingSecret: grafana-admin-credentials
+  #   userKey: user
+  #   passwordKey: password
+  adminPassword: "YourVeryStrongGrafanaPassword123"
   # Quyết định bật tính năng lưu trữ dữ liệu cho Grafana (dashboards, users...).
   # Dung lượng cụ thể sẽ do file môi trường quyết định.
   persistence:
@@ -26,6 +26,7 @@ grafana:
     type: pvc
     accessModes:
       - ReadWriteOnce
+    storageClassName: standard
 
 # -- Cấu hình Prometheus --
 prometheus:

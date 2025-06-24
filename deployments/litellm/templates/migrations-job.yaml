@@ -27,18 +27,23 @@ spec:
 
       initContainers:
         - name: wait-for-postgres
-          # Dùng một image nhẹ có chứa sẵn công cụ client của postgresql
           image: postgres:15-alpine
-          # Command sẽ chạy một vòng lặp, dùng pg_isready để kiểm tra kết nối
-          # Nó sẽ thử lại sau mỗi 2 giây cho đến khi database sẵn sàng
           command:
             - sh
             - "-c"
             - |
-              until pg_isready -h {{ .Release.Name }}-postgresql -p 5432 -U {{ .Values.postgresql.auth.username }}; do
-                echo "Waiting for database to be ready 123 ...";
-                sleep 2;
+              # Tên service của database dùng chung được tạo bởi chart Bitnami
+              # Định dạng: <tên-argo-app>-<tên-chart>-headless.<namespace>.svc.cluster.local
+              DB_HOST="postgresql-shared-hl.platform-services.svc.cluster.local"
+              
+              echo "Waiting for shared database at host: $DB_HOST"
+              # Lệnh pg_isready giờ sẽ dùng đúng host
+              # Chỉ cần kiểm tra kết nối TCP đến port là đủ, không cần user/pass ở bước này
+              until pg_isready -h $DB_HOST -p 5432; do
+                echo "Waiting for shared database...";
+                sleep 5;
               done;
+              echo "Shared database is ready! Starting migration..."
 
       containers:
         - name: prisma-migrations
