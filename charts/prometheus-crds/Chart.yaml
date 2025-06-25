@@ -1,0 +1,5 @@
+# chart
+apiVersion: v2
+name: prometheus-crds
+description: A Helm chart to install only the Prometheus Operator CRDs
+version: 1.0.0

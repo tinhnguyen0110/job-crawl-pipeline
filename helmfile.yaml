@@ -64,11 +64,15 @@ releases:
   #   needs:
   #   - argocd/argocd # Phụ thuộc vào ArgoCD
 
-
-  # Release 3: Application (frontend, backend)
-
-      # - monitoring/prometheus-stack
-        # Phụ thuộc vào Airflow
+  - name: prometheus-crds
+    namespace: monitoring
+    chart: ./charts/prometheus-crds
+    version: 0.1.0
+    # installed: true
+    values:
+      - ./charts/prometheus-crds/
+    labels:
+      app: prometheus-crds
 
 
 

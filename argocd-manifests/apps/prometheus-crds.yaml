@@ -1,0 +1,24 @@
+# argocd-manifests/apps/prometheus-crds.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-crds
+  namespace: argocd
+  annotations:
+    # Gán vào wave -1, đảm bảo nó chạy đầu tiên, trước cả các secret
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- URL Repo của bạn
+    targetRevision: main
+    # Trỏ thẳng đến thư mục chứa các file CRD.yaml
+    path: charts/prometheus-crds
+    # Báo cho ArgoCD biết đây là một chart Helm
+    helm: {}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    # CRD là tài nguyên toàn cluster, không có namespace, nhưng ArgoCD vẫn cần một giá trị ở đây
+    namespace: monitoring
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }

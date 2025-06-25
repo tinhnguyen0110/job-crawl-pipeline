@@ -1,8 +1,16 @@
 # monitoring/prometheus-values.yaml
-# Chứa các cấu hình CỐT LÕI, áp dụng cho TẤT CẢ các môi trường.
+
+# ==========================================================
+# PHẦN THÊM VÀO ĐỂ SỬA LỖI: Tắt việc cài đặt CRD
+# ==========================================================
+# Khối này sẽ ra lệnh cho Prometheus Operator trong chart
+# không tự mình tạo ra các Custom Resource Definitions.
+prometheusOperator:
+  createCrds: false
+# ==========================================================
 
 # -- Cấu hình chung --
-# Bật/tắt các thành phần chính của stack
+# Các khối này giữ nguyên như cũ
 grafana:
   enabled: true
 prometheus:
@@ -11,33 +19,24 @@ alertmanager:
   enabled: true
 
 # -- Cấu hình Grafana --
+# Có hai khối grafana, đây có thể là lỗi đánh máy, hãy gộp chúng lại.
 grafana:
-  # Sử dụng secret đã tạo để quản lý mật khẩu admin.
-  # Cách làm này là cố định cho mọi môi trường.
-  # admin:
-  #   existingSecret: grafana-admin-credentials
-  #   userKey: user
-  #   passwordKey: password
   adminPassword: "YourVeryStrongGrafanaPassword123"
-  # Quyết định bật tính năng lưu trữ dữ liệu cho Grafana (dashboards, users...).
-  # Dung lượng cụ thể sẽ do file môi trường quyết định.
   persistence:
     enabled: true
     type: pvc
     accessModes:
       - ReadWriteOnce
-    storageClassName: standard
+    storageClassName: standard # Bỏ comment nếu bạn muốn dùng StorageClass cụ thể
 
 # -- Cấu hình Prometheus --
 prometheus:
   prometheusSpec:
-    # Hành vi cốt lõi: Cho phép Prometheus khám phá TẤT CẢ ServiceMonitor trong cluster.
-    # Cấu hình này nên nhất quán ở mọi môi trường.
     serviceMonitorSelectorNilUsesHelmValues: false
-    # Quyết định bật tính năng lưu trữ cho Prometheus.
-    # Dung lượng cụ thể sẽ do file môi trường quyết định.
     storageSpec:
       volumeClaimTemplate:
         spec:
           accessModes: ["ReadWriteOnce"]
-          # Không cần định nghĩa storage ở đây, file môi trường sẽ ghi đè.
+          # Dung lượng cụ thể sẽ do file môi trường ghi đè
+          # requests:
+          #   storage: 20Gi
