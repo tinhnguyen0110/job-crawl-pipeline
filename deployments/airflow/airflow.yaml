@@ -47,6 +47,11 @@ triggerer:
   serviceAccount:
     create: false
     name: airflow-ksa
+    persistence:
+      enabled: true
+      size: 5Gi              # 👈 Giảm lại từ 100Gi
+      accessMode: ReadWriteOnce
+      storageClass: standard
 
 
 extraPipPackages:
@@ -135,4 +140,3 @@ data:
   # Định dạng: redis://:<password>@<host>:<port>/<db_number>
   brokerUrl: "redis://:YourStrongRedisPassword@redis-shared-master.platform-services.svc.cluster.local:6379/1"
     
-

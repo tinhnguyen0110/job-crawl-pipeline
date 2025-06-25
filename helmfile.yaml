@@ -33,7 +33,7 @@ releases:
 
 
   - name: prometheus-stack
-    namespace: monitoring
+    namespace: test
     chart: prometheus-community/kube-prometheus-stack
     version: "58.1.0"
     values:

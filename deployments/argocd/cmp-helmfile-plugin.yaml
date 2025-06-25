@@ -18,29 +18,63 @@ data:
   #     generate:
   #       #command: ["helmfile", "template", "--include-crds"]
   #       command: ["sh", "-c", "helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds"]
+  # plugin.yaml: |
+  #   apiVersion: argoproj.io/v1alpha1
+  #   kind: ConfigManagementPlugin
+  #   metadata:
+  #     name: helmfile
+  #   spec:
+  #     init:
+  #       command: ["helmfile", "repos"]
+      
+  #     generate:
+  #       command: ["sh", "-c"]
+  #       args:
+  #         - |
+  #           # SỬA LỖI Ở ĐÂY: Chuyển hướng tất cả các dòng echo sang stderr bằng `>&2`
+  #           echo "--- Processing Application: $ARGOCD_APP_NAME ---" >&2
+            
+  #           if [ -f "Chart.yaml" ]; then
+  #             echo "==> Detected standard Helm chart. Using 'helm template'..." >&2
+  #             # Lệnh helm template vẫn in YAML ra stdout như bình thường
+  #             helm template .
+  #           else
+  #             echo "==> Helmfile project detected. Using 'helmfile template' with selector: app=$ARGOCD_APP_NAME" >&2
+  #             # Lệnh helmfile template vẫn in YAML ra stdout như bình thường
+  #             helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds
+  #           fi
+  #           echo "--- Finished processing Application: $ARGOCD_APP_NAME ---" >&2
   plugin.yaml: |
     apiVersion: argoproj.io/v1alpha1
     kind: ConfigManagementPlugin
     metadata:
+      # Tên duy nhất của plugin
       name: helmfile
     spec:
+      # Init chạy một lần để chuẩn bị repo cho Helmfile
       init:
         command: ["helmfile", "repos"]
       
+      # Generate là lệnh chính để render manifest
       generate:
         command: ["sh", "-c"]
         args:
           - |
-            # SỬA LỖI Ở ĐÂY: Chuyển hướng tất cả các dòng echo sang stderr bằng `>&2`
-            echo "--- Processing Application: $ARGOCD_APP_NAME ---" >&2
+            # Chuyển hướng tất cả các dòng log (echo) sang stderr (>&2)
+            # để không làm "ô nhiễm" luồng output YAML
+            echo "--- [CMP] Processing Application: $ARGOCD_APP_NAME ---" >&2
             
+            # Kiểm tra xem đây có phải là một Helm chart thuần không
             if [ -f "Chart.yaml" ]; then
-              echo "==> Detected standard Helm chart. Using 'helm template'..." >&2
-              # Lệnh helm template vẫn in YAML ra stdout như bình thường
+              echo "==> [CMP] Standard Helm chart detected. Using 'helm template'..." >&2
+              # Nếu đúng, dùng Helm gốc để render thư mục hiện tại
               helm template .
             else
-              echo "==> Helmfile project detected. Using 'helmfile template' with selector: app=$ARGOCD_APP_NAME" >&2
-              # Lệnh helmfile template vẫn in YAML ra stdout như bình thường
-              helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds
+              # Nếu không, đây là một dự án Helmfile
+              echo "==> [CMP] Helmfile project detected. Using 'helmfile template' with selector: app=$ARGOCD_APP_NAME" >&2
+              # Dùng Helmfile với selector để render đúng release
+              helmfile -l app=$ARGOCD_APP_NAME template --include-crds
             fi
-            echo "--- Finished processing Application: $ARGOCD_APP_NAME ---" >&2
+            
+            echo "--- [CMP] Finished processing Application: $ARGOCD_APP_NAME ---" >&2
+
