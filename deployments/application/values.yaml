@@ -12,5 +12,5 @@ backend-chart:
   image:
     repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/backend # << ĐƯỜNG DẪN MỚI
     pullPolicy: IfNotPresent
-    tag: "g-d5b80f5" # Tag này sẽ được ghi đè bởi CI/CD
+    tag: "1234b" # Tag này sẽ được ghi đè bởi CI/CD
   fullnameOverride: "backend-service"

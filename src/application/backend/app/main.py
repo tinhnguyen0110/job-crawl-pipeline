@@ -1,66 +1,92 @@
-# main.py (Professional Version with Enhanced Logging)
+# main.py (Professional Version with Enhanced Logging & Metrics - Fixed)
 
+# =================================================================
 # 1. KHAI BÁO THƯ VIỆN
+# =================================================================
 import os
 import logging
 import time
 from fastapi import FastAPI, HTTPException, APIRouter, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, Text, Date, desc, distinct
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.declarative import declarative_base
-from pydantic import BaseModel
+# SỬA LỖI: Thêm import `declarative_base` từ sqlalchemy.orm
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
+# SỬA LỖI: Thêm import `ConfigDict` từ pydantic
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import date
-from sqlalchemy.exc import OperationalError
 
+# Thư viện Prometheus Client
+from prometheus_client import (
+    Counter,
+    Histogram,
+    make_asgi_app,
+    REGISTRY
+)
+
+# =================================================================
 # 2. CẤU HÌNH LOGGING BÀI BẢN
 # =================================================================
 logging.basicConfig(
-    level=logging.INFO, # Đặt mức log mặc định là INFO
-    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - [%(funcName)s] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
 # =================================================================
+# 3. ĐỊNH NGHĨA METRICS CHO PROMETHEUS
+# =================================================================
+# (Phần này giữ nguyên)
+http_requests_total = Counter(
+    "backend_http_requests_total",
+    "Total number of HTTP requests made to the backend.",
+    ["method", "endpoint", "http_status"]
+)
+http_requests_latency_seconds = Histogram(
+    "backend_http_requests_latency_seconds",
+    "HTTP request latency in seconds.",
+    ["method", "endpoint"]
+)
+db_errors_total = Counter(
+    "backend_database_errors_total",
+    "Total number of database errors encountered."
+)
 
-
-# 3. CẤU HÌNH TỪ BIẾN MÔI TRƯỜNG (PRODUCTION-READY)
+# =================================================================
+# 4. CẤU HÌNH TỪ BIẾN MÔI TRƯỜNG (PRODUCTION-READY)
 # =================================================================
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:123456@127.0.0.1:5432/job_db" # Fallback cho local dev
+    "postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db"
 )
-
-DATABASE_URL = "postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db"
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://35.186.144.250,http://34.54.46.178,http://localhost:5173,http://localhost:5174" # Fallback cho local dev
-)
+    "http://localhost:5173,http://localhost:5174"
+).split(",")
+
 # =================================================================
-
-
-# 4. THIẾT LẬP KẾT NỐI DATABASE VÀ KIỂM TRA
+# 5. THIẾT LẬP DATABASE VÀ ORM BASE
 # =================================================================
 try:
-    logger.info(f"Attempting to connect to database at host: {DATABASE_URL.split('@')[-1]}")
-    engine = create_engine(DATABASE_URL)
-    # Thử kết nối để xác nhận
+    logger.info(f"Attempting to connect to database using URL: {DATABASE_URL.split('@')[0]}@...")
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
     with engine.connect() as connection:
-        logger.info("Database connection successful!")
+        logger.info("Database connection established successfully!")
 except OperationalError as e:
-    logger.critical(f"CRITICAL: Failed to connect to the database: {e}")
-    # Trong môi trường thực tế, bạn có thể muốn ứng dụng thoát ở đây
-    # import sys
-    # sys.exit(1)
+    logger.critical(f"CRITICAL: Could not connect to the database. Error: {e}")
 except Exception as e:
     logger.critical(f"CRITICAL: An unexpected error occurred during database setup: {e}")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-# =================================================================
 
-# ... (Phần 4. ĐỊNH NGHĨA MODEL và 5. ĐỊNH NGHĨA SCHEMA giữ nguyên như cũ) ...
+# SỬA LỖI: Khai báo Base ở đây, ngay sau khi có engine
+Base = declarative_base()
+
+# =================================================================
+# 6. ĐỊNH NGHĨA MODEL VÀ SCHEMA
+# =================================================================
 class JobModel(Base):
     __tablename__ = "processed_jobs"
     id = Column(Integer, primary_key=True, index=True)
@@ -89,40 +115,61 @@ class JobSchema(BaseModel):
     benefits: Optional[str] = None
     date_posted: Optional[date] = None
     model: Optional[str] = None
-    class Config:
-        from_attributes = True
 
-# 6. KHỞI TẠO ỨNG DỤNG FASTAPI VÀ MIDDLEWARE
+    # SỬA LỖI: Cập nhật cú pháp Pydantic v2, dùng model_config thay cho class Config
+    model_config = ConfigDict(from_attributes=True)
+
 # =================================================================
-app = FastAPI(title="Crawl2Insight Job Search API")
+# 7. KHỞI TẠO ỨNG DỤNG FASTAPI VÀ MIDDLEWARE
+# =================================================================
+# (Phần này giữ nguyên, không thay đổi)
+app = FastAPI(
+    title="Crawl2Insight Job Search API",
+    description="API to search and analyze job postings, instrumented with Prometheus metrics.",
+    version="1.0.0"
+)
 
-# Middleware để ghi log mọi request
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def metrics_and_logging_middleware(request: Request, call_next):
+    # ... (logic middleware giữ nguyên)
+    method = request.method
+    endpoint = request.url.path
+    if endpoint in ["/metrics", "/health"]:
+        return await call_next(request)
     start_time = time.time()
-    logger.info(f"Request received: {request.method} {request.url.path}")
-    
-    response = await call_next(request)
-    
-    process_time = (time.time() - start_time) * 1000
-    formatted_process_time = '{0:.2f}'.format(process_time)
-    logger.info(f"Request finished: {request.method} {request.url.path} - Status: {response.status_code} - Took: {formatted_process_time}ms")
-    
+    logger.info(f"Request started: {method} {endpoint}")
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+    except Exception as e:
+        status_code = 500
+        logger.error(f"Request failed with unhandled exception: {method} {endpoint}", exc_info=True)
+        raise e
+    finally:
+        process_time = time.time() - start_time
+        http_requests_latency_seconds.labels(method=method, endpoint=endpoint).observe(process_time)
+        http_requests_total.labels(method=method, endpoint=endpoint, http_status=str(status_code)).inc()
+        formatted_process_time = '{0:.2f}'.format(process_time * 1000)
+        logger.info(f"Request finished: {method} {endpoint} - Status: {status_code} - Took: {formatted_process_time}ms")
     return response
 
-# Cấu hình CORS
-origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",")]
-logger.info(f"Configuring CORS for origins: {origins}")
+
+logger.info(f"Configuring CORS for origins: {ALLOWED_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# =================================================================
 
-# 7. DEPENDENCY ĐỂ LẤY DATABASE SESSION (Không đổi)
+metrics_app = make_asgi_app(registry=REGISTRY)
+app.mount("/metrics", metrics_app)
+
+# =================================================================
+# 8. DEPENDENCY VÀ ROUTER
+# =================================================================
+# (Phần này giữ nguyên, không thay đổi)
 def get_db():
     db = SessionLocal()
     try:
@@ -130,18 +177,16 @@ def get_db():
     finally:
         db.close()
 
-# 8. TẠO ROUTER VÀ ĐỊNH NGHĨA TOÀN BỘ ENDPOINTS
-# =================================================================
 router = APIRouter(prefix="/api/v1")
 
 @router.get("/jobs", response_model=List[JobSchema])
 def read_jobs(
+    # ... (logic endpoint giữ nguyên)
     searchTerm: Optional[str] = None,
     location: Optional[str] = None,
     seniority: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    logger.info(f"Querying jobs with - SearchTerm: '{searchTerm}', Location: '{location}', Seniority: '{seniority}'")
     try:
         query = db.query(JobModel)
         if searchTerm:
@@ -151,36 +196,37 @@ def read_jobs(
         if seniority:
             query = query.filter(JobModel.seniority == seniority)
         jobs = query.order_by(desc(JobModel.date_posted)).all()
-        logger.info(f"Found {len(jobs)} jobs.")
         return jobs
-    except Exception as e:
-        logger.error(f"Error querying database for jobs: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error while fetching jobs.")
+    except SQLAlchemyError as e:
+        logger.error(f"Database error while fetching jobs: {e}", exc_info=True)
+        db_errors_total.inc()
+        raise HTTPException(status_code=500, detail="A database error occurred.")
+
 
 @router.get("/seniorities", response_model=List[str])
 def get_seniorities(db: Session = Depends(get_db)):
-    logger.info("Querying for distinct seniorities.")
+    # ... (logic endpoint giữ nguyên)
     try:
         seniorities = db.query(distinct(JobModel.seniority)).all()
-        result = [s[0] for s in seniorities if s[0] is not None]
-        logger.info(f"Found {len(result)} distinct seniorities.")
-        return result
-    except Exception as e:
-        logger.error(f"Error fetching seniorities: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error while fetching seniorities.")
+        return [s[0] for s in seniorities if s[0] is not None]
+    except SQLAlchemyError as e:
+        logger.error(f"Database error fetching seniorities: {e}", exc_info=True)
+        db_errors_total.inc()
+        raise HTTPException(status_code=500, detail="A database error occurred.")
 
-# ... (Các endpoint khác như job-title-suggestions cũng nên dùng logger.error thay cho print) ...
+
 # =================================================================
-
-# 9. THÊM ROUTER VÀO APP CHÍNH
+# 9. THÊM ROUTER VÀ CÁC ENDPOINT CƠ BẢN VÀO APP
+# =================================================================
 app.include_router(router)
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def read_root():
     return {"message": "Welcome to the Crawl2Insight Job Search API!"}
 
 @app.get("/health", status_code=200)
 def health_check():
+    """Endpoint để Kubernetes Liveness/Readiness Probe kiểm tra sức khỏe."""
     return {"status": "ok"}
 
-logger.info("Application startup complete.")
+logger.info("Application startup complete. API is ready.")
