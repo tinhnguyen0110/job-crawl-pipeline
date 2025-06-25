@@ -27,13 +27,13 @@ releases:
   #   labels:
   #     app: argocd
 
-  - name: app-services          # Tên Helm release
-    namespace: application      # Namespace đích
-    chart: ./deployments/application # Đường dẫn đến chart
-    # needs:
-    # - argocd/argocd # Phụ thuộc vào ArgoCD
-    labels:
-      app: application-argo
+  # - name: app-services          # Tên Helm release
+  #   namespace: application      # Namespace đích
+  #   chart: ./deployments/application # Đường dẫn đến chart
+  #   # needs:
+  #   # - argocd/argocd # Phụ thuộc vào ArgoCD
+  #   labels:
+  #     app: application-argo
 
 
   - name: prometheus-stack
@@ -58,13 +58,13 @@ releases:
   #   - argocd/argocd # Phụ thuộc vào ArgoCD
 
   #   # Release 2: Litellm Service
-  - name: litellm-service         # Tên Helm release
-    namespace: platform-services      # Namespace đích
-    labels:
-      app: litellm-service
-    chart: ./deployments/litellm # Đường dẫn đến chart
-    values:
-      - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
+  # - name: litellm-service         # Tên Helm release
+  #   namespace: platform-services      # Namespace đích
+  #   labels:
+  #     app: litellm-service
+  #   chart: ./deployments/litellm # Đường dẫn đến chart
+  #   values:
+  #     - ./deployments/litellm/litellm.yaml # Sử dụng cấu hình chung cho Litellm Service
   #   needs:
   #   - argocd/argocd # Phụ thuộc vào ArgoCD
 
