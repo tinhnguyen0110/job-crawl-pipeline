@@ -22,6 +22,14 @@ service:
   port: 80         # Cổng của Service
   targetPort: 8000   # Cổng của container
 
+  metrics:
+      # Bật hoặc tắt việc tạo port metrics. Để là `true`.
+      enabled: true
+      # Cổng của Service sẽ mở ra để Prometheus vào
+      port: 9090
+      # Cổng của container backend đang expose endpoint /metrics
+      targetPort: 9090
+
 # # Cấu hình cho ứng dụng FastAPI
 # appConfig:
 #   database:
@@ -45,8 +53,6 @@ appConfig:
   database:
     secretName: "db-credentials"
     secretKey: "database-url"
-    # Thêm giá trị thật của chuỗi kết nối vào đây
-    # !!! KHÔNG NÊN COMMIT GIÁ TRỊ THẬT NÀY LÊN GIT PUBLIC !!!
     connectionString: "postgresql+psycopg2://postgres:123456@127.0.0.1:5432/job_db"
 
 # Cấu hình tài nguyên cho container (rất quan trọng cho production)

@@ -5,6 +5,7 @@ metadata:
   name: {{ include "backend-chart.fullname" . }}
   labels:
     {{- include "backend-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "backend-chart.name" . }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,5 +13,17 @@ spec:
       targetPort: {{ .Values.service.targetPort }}
       protocol: TCP
       name: http
+      
+    # ==========================================================
+    # PHẦN SỬA LỖI: Dùng `and` để kiểm tra cả hai điều kiện
+    # ==========================================================
+    {{- if and .Values.service.metrics .Values.service.metrics.enabled }}
+    - name: http-metrics
+      port: {{ .Values.service.metrics.port }}
+      targetPort: {{ .Values.service.metrics.targetPort }}
+      protocol: TCP
+    {{- end }}
+    # ==========================================================
+      
   selector:
     {{- include "backend-chart.selectorLabels" . | nindent 4 }}

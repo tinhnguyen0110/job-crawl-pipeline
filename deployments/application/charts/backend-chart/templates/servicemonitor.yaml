@@ -1,0 +1,28 @@
+# templates/servicemonitor.yaml
+
+# ==========================================================
+# PHẦN SỬA LỖI: Dùng `and` để kiểm tra cả hai điều kiện
+# ==========================================================
+{{- if and .Values.service.metrics .Values.service.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "backend-chart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "backend-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+      
+  endpoints:
+  - port: http-metrics
+    interval: 30s
+    path: /metrics
+{{- end }}
