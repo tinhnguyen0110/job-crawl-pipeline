@@ -4,17 +4,43 @@ metadata:
   name: cmp-helmfile-plugin
   namespace: argocd
 data:
+  # plugin.yaml: |
+  #   apiVersion: argoproj.io/v1alpha1
+  #   kind: ConfigManagementPlugin
+  #   metadata:
+  #     name: helmfile
+  #   spec:
+  #     discover:
+  #       find: 
+  #         command: ["sh", "-c", "echo '[🔍] Discovering helmfile...'; find . -maxdepth 2 -name 'helmfile.yaml'"]
+  #     init:
+  #       command: ["helmfile", "repos"]
+  #     generate:
+  #       #command: ["helmfile", "template", "--include-crds"]
+  #       command: ["sh", "-c", "helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds"]
   plugin.yaml: |
     apiVersion: argoproj.io/v1alpha1
     kind: ConfigManagementPlugin
     metadata:
       name: helmfile
     spec:
-      discover:
-        find: 
-          command: ["sh", "-c", "echo '[🔍] Discovering helmfile...'; find . -maxdepth 2 -name 'helmfile.yaml'"]
       init:
         command: ["helmfile", "repos"]
+      
       generate:
-        #command: ["helmfile", "template", "--include-crds"]
-        command: ["sh", "-c", "helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds"]
+        command: ["sh", "-c"]
+        args:
+          - |
+            # SỬA LỖI Ở ĐÂY: Chuyển hướng tất cả các dòng echo sang stderr bằng `>&2`
+            echo "--- Processing Application: $ARGOCD_APP_NAME ---" >&2
+            
+            if [ -f "Chart.yaml" ]; then
+              echo "==> Detected standard Helm chart. Using 'helm template'..." >&2
+              # Lệnh helm template vẫn in YAML ra stdout như bình thường
+              helm template .
+            else
+              echo "==> Helmfile project detected. Using 'helmfile template' with selector: app=$ARGOCD_APP_NAME" >&2
+              # Lệnh helmfile template vẫn in YAML ra stdout như bình thường
+              helmfile -e development -l app=$ARGOCD_APP_NAME template --include-crds
+            fi
+            echo "--- Finished processing Application: $ARGOCD_APP_NAME ---" >&2
