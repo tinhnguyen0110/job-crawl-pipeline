@@ -40,14 +40,15 @@ build/
 temp/
 *.log
 *.swp
+airflow/logs/
 
 # Các file của hệ điều hành và IDE
 .DS_Store
 .vscode/
 .history/
 
-# .trigger*
-*.pub*
+.trigger*
+*.pub
 replacements.txt
 
 kube-prometheus-stack/

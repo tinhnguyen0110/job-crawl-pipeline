@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-# Danh sách component cần trigger (mặc định là cả 3)
+
 components=("$@")
 if [ ${#components[@]} -eq 0 ]; then
   components=("backend" "frontend" "airflow")
