@@ -13,6 +13,10 @@ repositories:
     url: https://prometheus-community.github.io/helm-charts
 ---
 # Danh sách các Helm Release cần triển khai
+helmDefaults:
+  skipDeps: true
+  cleanupOnFail: true
+
 releases:
   # - name: argocd
   #   namespace: argocd
@@ -33,7 +37,7 @@ releases:
 
 
   - name: prometheus-stack
-    namespace: test
+    namespace: monitoring
     chart: prometheus-community/kube-prometheus-stack
     version: "58.1.0"
     values:

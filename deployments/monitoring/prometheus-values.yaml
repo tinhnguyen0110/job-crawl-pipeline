@@ -39,5 +39,6 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           storageClassName: standard
           # Dung lượng cụ thể sẽ do file môi trường ghi đè
-          # requests:
-          #   storage: 20Gi
+          resources:
+            requests:
+              storage: 10Gi
