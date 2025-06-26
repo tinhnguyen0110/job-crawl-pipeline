@@ -52,3 +52,4 @@ airflow/logs/
 replacements.txt
 
 kube-prometheus-stack/
+airflow_gitsync

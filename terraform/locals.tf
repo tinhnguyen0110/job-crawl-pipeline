@@ -1,4 +1,4 @@
 ### ssh user for git sync airflow
 locals {
-  gitsync_ssh_private_key = file("airflow-gitsync")
+  gitsync_ssh_private_key = file("airflow_gitsync")
 }
