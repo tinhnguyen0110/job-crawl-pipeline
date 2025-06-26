@@ -28,7 +28,7 @@ service:
       # Cổng của Service sẽ mở ra để Prometheus vào
       port: 9090
       # Cổng của container backend đang expose endpoint /metrics
-      targetPort: 9090
+      targetPort: 8000
 
 # # Cấu hình cho ứng dụng FastAPI
 # appConfig:

@@ -8,7 +8,7 @@ image:
 
 service:
   name: react-frontend-service
-  type: ClusterIP
+  type: NodePort     
   port: 80         # Cổng của Service
   targetPort: 80   # Cổng của container
 

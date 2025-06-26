@@ -1,8 +1,4 @@
 # templates/servicemonitor.yaml
-
-# ==========================================================
-# PHẦN SỬA LỖI: Dùng `and` để kiểm tra cả hai điều kiện
-# ==========================================================
 {{- if and .Values.service.metrics .Values.service.metrics.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
