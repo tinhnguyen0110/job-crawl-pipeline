@@ -22,6 +22,11 @@ loki:
           period: 24h # Tạo index mới mỗi 24 giờ
   limits_config:
     allow_structured_metadata: false  # 👈 THÊM DÒNG NÀY
+  commonConfig:
+    path_prefix: /var/loki
+  labels:
+    app.kubernetes.io/component: loki
+    app.kubernetes.io/name: loki
 
 singleBinary:
   replicas: 1
@@ -31,6 +36,10 @@ singleBinary:
     storageClassName: standard
 
 # ==========================================================
+
+podLabels:
+  component: loki
+  app: loki
 
 backend:
   replicas: 0
@@ -43,8 +52,48 @@ ruler:
 ingester:
   enabled: false
 
-promtail:
-  enabled: true
-
 gateway:
   enabled: false
+
+promtail:
+  enabled: true
+  config:
+    server:
+      disable: false
+      http_listen_port: 9080
+      grpc_listen_port: 0
+    positions:
+      filename: /tmp/positions.yaml
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+    scrape_configs:
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_container_name]
+            target_label: container
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            regex: '.*'
+            action: keep
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+        pipeline_stages:
+          - docker: {}
+        static_configs:
+          - targets: ['localhost']
+            labels:
+              job: varlogs
+              __path__: /var/log/containers/*.log
+
+
