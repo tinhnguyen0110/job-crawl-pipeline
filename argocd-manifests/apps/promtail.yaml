@@ -1,0 +1,22 @@
+# argocd-manifests/apps/promtail.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+  namespace: argocd
+  annotations:
+    # Chạy ở Wave 1, sau khi Loki (Wave 0) đã ổn định
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- URL Repo của bạn
+    targetRevision: main
+    path: '.'
+    plugin:
+      name: helmfile
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
