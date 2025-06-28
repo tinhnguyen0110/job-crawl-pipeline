@@ -55,8 +55,13 @@ data:
         command: ["sh", "-c"]
         args:
           - |
-            echo "========================================================="
+            echo "=========================================================" >&2
             echo "--- [CMP] Processing Application: $ARGOCD_APP_NAME ---" >&2
+            echo ">>> Current Directory: $(pwd)" >&2
+            echo ">>> Files in working directory:" >&2
+            ls -la >&2
+            echo "---------------------------------------------------------" >&2
+
             if [ -f "Chart.yaml" ]; then
               echo "==> Standard Helm chart detected" >&2
               helm template .
@@ -68,5 +73,5 @@ data:
               echo "No Chart.yaml or helmfile.yaml found!" >&2
               exit 1
             fi
-            echo "========================================================="
+            echo "=========================================================" >&2
 
