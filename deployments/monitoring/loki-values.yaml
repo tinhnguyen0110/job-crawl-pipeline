@@ -6,7 +6,7 @@ loki:
   # Cấu hình lưu trữ. Bắt buộc phải có để các template helper hoạt động.
   storage:
     type: 'filesystem'
-  
+  auth_enabled: false
   # ==========================================================
   # PHẦN SỬA LỖI: Thêm vào schema_config cơ bản
   # ==========================================================
