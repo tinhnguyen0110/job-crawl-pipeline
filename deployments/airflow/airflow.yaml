@@ -47,11 +47,11 @@ triggerer:
   serviceAccount:
     create: false
     name: airflow-ksa
-    persistence:
-      enabled: true
-      size: 5Gi              # 👈 Giảm lại từ 100Gi
-      accessMode: ReadWriteOnce
-      storageClass: standard
+  persistence:
+    enabled: true
+    size: 5Gi              # 👈 Giảm lại từ 100Gi
+    accessMode: ReadWriteOnce
+    storageClass: standard
 
 
 extraPipPackages:
