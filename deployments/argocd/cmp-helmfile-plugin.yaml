@@ -51,30 +51,22 @@ data:
       # Tên duy nhất của plugin
       name: helmfile
     spec:
-      # Init chạy một lần để chuẩn bị repo cho Helmfile
-      init:
-        command: ["helmfile", "repos"]
-      
-      # Generate là lệnh chính để render manifest
       generate:
         command: ["sh", "-c"]
         args:
           - |
-            # Chuyển hướng tất cả các dòng log (echo) sang stderr (>&2)
-            # để không làm "ô nhiễm" luồng output YAML
+            echo "========================================================="
             echo "--- [CMP] Processing Application: $ARGOCD_APP_NAME ---" >&2
-            
-            # Kiểm tra xem đây có phải là một Helm chart thuần không
             if [ -f "Chart.yaml" ]; then
-              echo "==> [CMP] Standard Helm chart detected. Using 'helm template'..." >&2
-              # Nếu đúng, dùng Helm gốc để render thư mục hiện tại
+              echo "==> Standard Helm chart detected" >&2
               helm template .
-            else
-              # Nếu không, đây là một dự án Helmfile
-              echo "==> [CMP] Helmfile project detected. Using 'helmfile template' with selector: app=$ARGOCD_APP_NAME" >&2
-              # Dùng Helmfile với selector để render đúng release
+            elif [ -f "helmfile.yaml" ]; then
+              echo "==> Helmfile project detected" >&2
+              helmfile repos
               helmfile -l app=$ARGOCD_APP_NAME template --include-crds
+            else
+              echo "No Chart.yaml or helmfile.yaml found!" >&2
+              exit 1
             fi
-            
-            echo "--- [CMP] Finished processing Application: $ARGOCD_APP_NAME ---" >&2
+            echo "========================================================="
 
