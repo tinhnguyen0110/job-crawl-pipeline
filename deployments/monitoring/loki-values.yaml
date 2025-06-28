@@ -20,6 +20,8 @@ loki:
         index:
           prefix: index_
           period: 24h # Tạo index mới mỗi 24 giờ
+  limits_config:
+    allow_structured_metadata: false  # 👈 THÊM DÒNG NÀY
 
 singleBinary:
   replicas: 1
