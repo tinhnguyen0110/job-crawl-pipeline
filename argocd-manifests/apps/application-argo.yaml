@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- Nhớ thay
     targetRevision: main
-    path: .
+    path: '.'
     plugin:
       name: helmfile
   destination:

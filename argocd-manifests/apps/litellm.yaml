@@ -12,7 +12,8 @@ spec:
     repoURL: 'https://github.com/tinhnguyen0110/job-crawl-pipeline.git' # <-- Nhớ thay
     targetRevision: main
     path: '.'
-    # Quan trọng: Vẫn dùng plugin helmfile vì airflow được quản lý bởi helmfile
+    plugin:
+      name: helmfile
   destination:
     server: 'https://kubernetes.default.svc'
     # Namespace đích cho release này
