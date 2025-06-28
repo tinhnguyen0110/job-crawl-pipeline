@@ -94,7 +94,7 @@ releases:
     chart: grafana/promtail # <-- Sử dụng chart promtail riêng biệt
     version: "6.15.5"       # Chỉ định phiên bản
     values:
-      - ./monitoring/promtail-values.yaml
+      - ./deployments/monitoring/promtail-values.yaml
     labels:
       app: promtail # Nhãn riêng cho promtail
 
