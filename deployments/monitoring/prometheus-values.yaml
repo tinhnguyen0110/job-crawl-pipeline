@@ -29,6 +29,15 @@ grafana:
       - ReadWriteOnce
     storageClassName: standard # Bỏ comment nếu bạn muốn dùng StorageClass cụ thể
 
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      # URL trỏ đến service của Loki được tạo bởi chart ở Bước 2
+      # Định dạng: http://<tên-release-loki>.<namespace>.svc.cluster.local:3100
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
+      isDefault: false # Đặt là false để Prometheus vẫn là nguồn dữ liệu mặc định
+
 # -- Cấu hình Prometheus --
 prometheus:
   prometheusSpec:

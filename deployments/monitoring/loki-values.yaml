@@ -1,0 +1,18 @@
+# monitoring/loki-values.yaml
+
+# Cấu hình cho Loki (thành phần lưu trữ)
+loki:
+  # Bật tính năng lưu trữ liên tục (Persistent Volume)
+  persistence:
+    enabled: true
+    size: 10Gi # Dung lượng lưu trữ log ban đầu cho dev
+    storageClassName: standard # Hoặc StorageClass bạn muốn dùng
+
+# Bật Promtail và cấu hình nó
+promtail:
+  enabled: true
+  # Promtail sẽ tự động tìm Loki service bên trong cluster, không cần cấu hình thêm
+
+# Tắt các thành phần không cần thiết khác trong chart để tiết kiệm tài nguyên
+gateway:
+  enabled: false
