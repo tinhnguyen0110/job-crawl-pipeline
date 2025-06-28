@@ -1,5 +1,3 @@
-# monitoring/loki-values.yaml - Phiên bản phòng thủ và tường minh
-
 deploymentMode: SingleBinary
 
 loki:
@@ -7,10 +5,6 @@ loki:
   storage:
     type: 'filesystem'
   auth_enabled: false
-  # ==========================================================
-  # PHẦN SỬA LỖI: Thêm vào schema_config cơ bản
-  # ==========================================================
-  # Đây là cấu hình bắt buộc khi dùng persistence
   schemaConfig:
     configs:
       - from: 2024-01-01 # Bắt đầu từ một ngày trong quá khứ
@@ -24,6 +18,7 @@ loki:
     allow_structured_metadata: false  # 👈 THÊM DÒNG NÀY
   commonConfig:
     path_prefix: /var/loki
+    replication_factor: 1
   labels:
     app.kubernetes.io/component: loki
     app.kubernetes.io/name: loki
@@ -34,12 +29,6 @@ singleBinary:
     enabled: true
     size: 10Gi
     storageClassName: standard
-
-# ==========================================================
-
-podLabels:
-  component: loki
-  app: loki
 
 backend:
   replicas: 0
@@ -54,46 +43,4 @@ ingester:
 
 gateway:
   enabled: false
-
-promtail:
-  enabled: true
-  config:
-    server:
-      disable: false
-      http_listen_port: 9080
-      grpc_listen_port: 0
-    positions:
-      filename: /tmp/positions.yaml
-    clients:
-      - url: http://loki:3100/loki/api/v1/push
-    scrape_configs:
-      - job_name: kubernetes-pods
-        kubernetes_sd_configs:
-          - role: pod
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_app]
-            target_label: app
-          - source_labels: [__meta_kubernetes_namespace]
-            target_label: namespace
-          - source_labels: [__meta_kubernetes_pod_name]
-            target_label: pod
-          - source_labels: [__meta_kubernetes_container_name]
-            target_label: container
-          - source_labels: [__meta_kubernetes_pod_container_name]
-            regex: '.*'
-            action: keep
-          - action: labelmap
-            regex: __meta_kubernetes_pod_label_(.+)
-          - source_labels: [__meta_kubernetes_pod_node_name]
-            target_label: node
-          - source_labels: [__meta_kubernetes_namespace]
-            target_label: namespace
-        pipeline_stages:
-          - docker: {}
-        static_configs:
-          - targets: ['localhost']
-            labels:
-              job: varlogs
-              __path__: /var/log/containers/*.log
-
 
