@@ -51,30 +51,37 @@ data:
       # Tên duy nhất của plugin
       name: helmfile
     spec:
+      init:
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "===== [INIT] Start Debugging =====" >&2
+            echo "App Name: $ARGOCD_APP_NAME" >&2
+            echo "Working Directory: $(pwd)" >&2
+            echo "Listing files (ls -la):" >&2
+            ls -la >&2
+            echo "Searching for helmfile.yaml:" >&2
+            find . -name "helmfile.yaml" >&2
+            echo "Searching for Chart.yaml:" >&2
+            find . -name "Chart.yaml" >&2
+            echo "===== [INIT] End Debugging =====" >&2
+
+            # Nếu có helmfile.yaml thì chạy helmfile repos
+            if [ -f "helmfile.yaml" ]; then
+              helmfile repos
+            fi
+
+      # Bước generate đơn giản hóa
       generate:
         command: ["sh", "-c"]
         args:
           - |
-            echo "=========================================================" >&2
-            echo "--- [CMP] Processing Application: $ARGOCD_APP_NAME ---" >&2
-            echo ">>> Current Directory: $(pwd)" >&2
-            echo ">>> Files in working directory:" >&2
-            ls -la >&2
-            echo ">>> Files and structure:" >&2
-            find . -type f | sort >&2
-            echo "---------------------------------------------------------" >&2
-
             if [ -f "Chart.yaml" ]; then
-              echo "==> Standard Helm chart detected" >&2
               helm template .
             elif [ -f "helmfile.yaml" ]; then
-              echo "==> Helmfile project detected" >&2
-              helmfile repos
               helmfile -l app=$ARGOCD_APP_NAME template --include-crds
             else
-              echo "No Chart.yaml or helmfile.yaml found!" >&2
+              echo "[ERROR] No Chart.yaml or helmfile.yaml found!" >&2
               exit 1
             fi
-
-            echo "=========================================================" >&2
-
+            echo "===========================================" >&2
