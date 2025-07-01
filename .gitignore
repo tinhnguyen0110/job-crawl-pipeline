@@ -47,7 +47,7 @@ airflow/logs/
 .vscode/
 .history/
 
-.trigger*
+# .trigger*
 *.pub
 replacements.txt
 
