@@ -136,4 +136,5 @@ jobs:
 
       - name: Log final image tag
         if: steps.changed_files.outputs.any_changed == 'true'
-        run: echo "Successfully pushed images with tag: ${{ steps.git_tag.outputs.tag }}"
+        run: |
+          echo "Successfully pushed images with tag: ${{ steps.git_tag.outputs.tag }}"

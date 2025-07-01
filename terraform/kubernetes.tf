@@ -1,18 +1,18 @@
 # kubernetes.tf
 data "google_client_config" "default" {}
 # Lấy thông tin GKE cluster đã có để xác thực provider
-data "google_container_cluster" "primary" {
-  name     = var.gke_cluster_name
-  location = var.zone
-  project  = var.project_id
-  depends_on = [google_container_cluster.primary]
-}
+#resource "google_container_cluster" "primary" {
+#  name     = var.gke_cluster_name
+#  location = var.zone
+#  project  = var.project_id
+#  depends_on = [google_container_cluster.primary]
+#}
 
 # Cấu hình provider Kubernetes để Terraform có thể thao tác với GKE
 provider "kubernetes" {
-  host                   = "https://${data.google_container_cluster.primary.endpoint}"
+  host                   = "https://${google_container_cluster.primary.endpoint}"
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(data.google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
 }
 
 # 1. Tạo các Namespace mới
@@ -20,7 +20,6 @@ resource "kubernetes_namespace" "airflow_ns" {
   metadata {
     name = "airflow"
   }
-
 }
 
 resource "kubernetes_namespace" "platform_services_ns" {
@@ -28,6 +27,12 @@ resource "kubernetes_namespace" "platform_services_ns" {
     name = "platform-services" # Namespace cho LiteLLM
   }
 
+}
+
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
 }
 
 resource "kubernetes_namespace" "secret_ns" {

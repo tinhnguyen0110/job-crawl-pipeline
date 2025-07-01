@@ -8,9 +8,17 @@ frontend-chart:
   backend:
     serviceName: "backend-service"
     servicePort: 80
+  ingressClass:
+    create: false
 backend-chart:
   image:
     repository: asia-southeast1-docker.pkg.dev/alpine-figure-461007-i9/crawl2insight-repo/backend # << ĐƯỜNG DẪN MỚI
     pullPolicy: IfNotPresent
     tag: "1234b" # Tag này sẽ được ghi đè bởi CI/CD
   fullnameOverride: "backend-service"
+  service:
+    type: ClusterIP
+    port: 80         # Cổng của Service
+    targetPort: 8000   # Cổng của container
+    metrics:
+        enabled: false
