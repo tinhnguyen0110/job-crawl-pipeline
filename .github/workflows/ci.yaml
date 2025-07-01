@@ -87,13 +87,11 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Login to Artifact Registry
+      - name: Setup Docker for GAR
         if: steps.changed_files.outputs.any_changed == 'true'
-        uses: docker/login-action@v3
+        uses: ./.github/actions/setup-docker
         with:
-          registry: ${{ env.GAR_REGION }}-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.setup-gcp-auth.outputs.access_token }}
+          gar_location: ${{ env.GAR_REGION }}
 
       # --- Các bước Build và Push có điều kiện giữ nguyên ---
       - name: Build and Push Backend Image
