@@ -6,6 +6,10 @@ venv/
 env/
 .pytest_cache/
 
+# Test coverage
+.coverage
+htmlcov/
+
 # File môi trường !
 .env
 *.env
