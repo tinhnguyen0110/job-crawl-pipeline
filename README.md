@@ -14,7 +14,9 @@ The project fully embraces modern DevOps and GitOps principles. Infrastructure i
 
 Detailed architecture, setup instructions, and deployment configurations can be found within this repository's documentation.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-joblytics.io.vn-brightgreen?style=for-the-badge&logo=react)](http://joblytics.io.vn)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-joblytics.io.vn-brightgreen?style=for-the-badge&logo=react)](http://joblytics.io.vn) [![Visits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/tinhnguyen0110/job-crawl-pipeline&count_bg=%2379C83D&title_bg=%23555555&icon=github.svg&icon_color=%23E7E7E7&title=unique+visits&edge_flat=false)](https://hits.seeyoufarm.com)
+
+
 ---
 
 <em><em>
