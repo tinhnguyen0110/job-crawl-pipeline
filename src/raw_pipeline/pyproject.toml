@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=25"
+]
+markers = [
+    "integration: marks tests as integration tests (may require external resources)",
+    "unit: marks tests as unit tests",
+    "slow: marks tests as slow running"
+]

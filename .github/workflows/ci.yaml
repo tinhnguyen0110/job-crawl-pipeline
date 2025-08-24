@@ -30,6 +30,19 @@ jobs:
         id: git_tag
         run: echo "tag=g-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      # --- Run tests before building ---
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Run Raw Pipeline Tests
+        run: |
+          cd src/raw_pipeline
+          pip install -r requirements.txt
+          python run_tests.py unit
+        continue-on-error: false
+
       # --- Bước kiểm tra thay đổi file (Giữ nguyên logic tuyệt vời của bạn) ---
       - name: Check for file changes
         id: changed_files

@@ -1,0 +1,4 @@
+playwright
+pyyaml
+pytest
+pytest-cov
